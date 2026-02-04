@@ -15,7 +15,29 @@ echo ""
 echo "🚀 Mac 개발 환경 원격 설치 시작"
 echo ""
 
-# dotfiles 다운로드 (Git 불필요)
+# ============================================================
+# 1. Xcode Command Line Tools 설치
+# ============================================================
+if ! xcode-select -p &>/dev/null; then
+    echo "📦 Xcode CLI Tools 설치 중..."
+    xcode-select --install
+
+    echo ""
+    echo "⏳ Xcode CLI Tools 설치 팝업이 열렸습니다."
+    echo "   설치를 완료하면 자동으로 계속됩니다..."
+    echo ""
+
+    # 설치 완료 대기
+    until xcode-select -p &>/dev/null; do
+        sleep 5
+    done
+    echo "✅ Xcode CLI Tools 설치 완료"
+    echo ""
+fi
+
+# ============================================================
+# 2. dotfiles 다운로드
+# ============================================================
 if [ -d "$DOTFILES_DIR" ]; then
     echo "📁 기존 dotfiles 발견, 업데이트 중..."
     rm -rf "$DOTFILES_DIR"
@@ -30,6 +52,8 @@ chmod +x "$DOTFILES_DIR/bootstrap.sh"
 chmod +x "$DOTFILES_DIR/scripts/"*.sh 2>/dev/null || true
 chmod +x "$DOTFILES_DIR/macos/"*.sh 2>/dev/null || true
 
-# 부트스트랩 실행 (메뉴 없이 바로 설치)
+# ============================================================
+# 3. 부트스트랩 실행
+# ============================================================
 cd "$DOTFILES_DIR"
 exec ./bootstrap.sh install
