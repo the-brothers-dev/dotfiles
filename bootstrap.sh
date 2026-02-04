@@ -84,14 +84,26 @@ if echo "$FAILED" | grep -q "not yet installed"; then
 fi
 
 # ============================================================
-# 4. dotfiles 심링크
+# 4. Oh My Zsh
+# ============================================================
+log "Oh My Zsh 확인 중..."
+if [ ! -d "$HOME/.oh-my-zsh" ]; then
+    log "Oh My Zsh 설치 중..."
+    RUNZSH=no KEEP_ZSHRC=yes sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+    ok "Oh My Zsh 설치 완료"
+else
+    ok "Oh My Zsh 이미 설치됨"
+fi
+
+# ============================================================
+# 5. dotfiles 심링크
 # ============================================================
 log "dotfiles 심링크 생성 중..."
 bash "$DOTFILES_DIR/scripts/symlinks.sh"
 ok "심링크 완료"
 
 # ============================================================
-# 5. Git 사용자 설정
+# 6. Git 사용자 설정
 # ============================================================
 log "Git 사용자 설정..."
 CURRENT_NAME=$(git config --global user.name 2>/dev/null || echo "")
@@ -116,7 +128,7 @@ else
 fi
 
 # ============================================================
-# 6. krew 플러그인 (kubectl 플러그인 매니저)
+# 7. krew 플러그인 (kubectl 플러그인 매니저)
 # ============================================================
 log "krew 플러그인 업데이트 중..."
 if command -v kubectl-krew &>/dev/null; then
@@ -127,13 +139,13 @@ else
 fi
 
 # ============================================================
-# 7. macOS 시스템 설정
+# 8. macOS 시스템 설정
 # ============================================================
 log "macOS 시스템 설정 적용 중..."
 bash "$DOTFILES_DIR/macos/defaults.sh"
 
 # ============================================================
-# 8. SSH 키 생성 (없으면)
+# 9. SSH 키 생성 (없으면)
 # ============================================================
 log "SSH 키 확인 중..."
 if [ ! -f "$HOME/.ssh/id_ed25519" ]; then

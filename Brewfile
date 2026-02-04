@@ -43,12 +43,10 @@ brew "zsh-syntax-highlighting"
 cask "claude-code"
 # Terminal emulator as alternative to Apple's Terminal app
 cask "iterm2"
+# Fast, light, simple Docker & Kubernetes on macOS
+cask "orbstack"
 # Mesh VPN based on WireGuard
-cask "tailscale-app"
-# Development environment
-cask "vagrant"
-# Virtualiser for arm64 hardware
-cask "virtualbox"
+cask "tailscale"
 # Open-source code editor
 cask "visual-studio-code"
 
