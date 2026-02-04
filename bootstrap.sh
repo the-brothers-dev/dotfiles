@@ -68,19 +68,25 @@ ok "Homebrew $(brew --version | head -1)"
 # ============================================================
 # 3. Brewfile - 패키지 일괄 설치
 # ============================================================
-log "Brewfile로 패키지 설치 중... (시간이 걸릴 수 있습니다)"
-brew bundle --file="$DOTFILES_DIR/Brewfile" --no-lock 2>&1 | while read -r line; do
-    echo "  $line"
-done
-ok "Brewfile 설치 완료"
-
-# 실패한 항목 확인
-FAILED=$(brew bundle check --file="$DOTFILES_DIR/Brewfile" 2>&1 || true)
-if echo "$FAILED" | grep -q "not yet installed"; then
-    warn "일부 패키지 설치 실패:"
-    echo "$FAILED" | grep "not yet installed" | while read -r line; do
-        echo "  ⚠️  $line"
+log "Brewfile 패키지 확인 중..."
+if brew bundle check --file="$DOTFILES_DIR/Brewfile" &>/dev/null; then
+    ok "모든 패키지 이미 설치됨"
+else
+    log "누락된 패키지 설치 중... (시간이 걸릴 수 있습니다)"
+    brew bundle --file="$DOTFILES_DIR/Brewfile" --no-lock 2>&1 | while read -r line; do
+        echo "  $line"
     done
+
+    # 실패한 항목 확인
+    FAILED=$(brew bundle check --file="$DOTFILES_DIR/Brewfile" 2>&1 || true)
+    if echo "$FAILED" | grep -q "not yet installed"; then
+        warn "일부 패키지 설치 실패:"
+        echo "$FAILED" | grep "not yet installed" | while read -r line; do
+            echo "  ⚠️  $line"
+        done
+    else
+        ok "Brewfile 설치 완료"
+    fi
 fi
 
 # ============================================================
