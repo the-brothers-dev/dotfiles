@@ -1,8 +1,10 @@
 #!/bin/bash
 # ============================================================
-# dotfiles 심링크 생성 (idempotent)
-# - 이미 올바른 심링크면 건너뜀
-# - 일반 파일이면 .bak 백업 후 심링크 생성
+# dotfiles 심링크 관리 (idempotent)
+#
+# 사용법:
+#   ./symlinks.sh           # 심링크 생성
+#   ./symlinks.sh --restore # 심링크 제거 및 백업 복원
 # ============================================================
 set -euo pipefail
 
@@ -10,9 +12,21 @@ DOTFILES_DIR="$HOME/.dotfiles"
 
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
+RED='\033[0;31m'
 NC='\033[0m'
 
-link_file() {
+# 심링크 대상 목록
+declare -A SYMLINKS=(
+    ["$DOTFILES_DIR/shell/.zshrc"]="$HOME/.zshrc"
+    ["$DOTFILES_DIR/shell/.zprofile"]="$HOME/.zprofile"
+    ["$DOTFILES_DIR/git/.gitconfig"]="$HOME/.gitconfig"
+    ["$DOTFILES_DIR/git/.gitignore_global"]="$HOME/.gitignore_global"
+)
+
+# ============================================================
+# 심링크 생성
+# ============================================================
+do_link() {
     local src="$1"
     local dst="$2"
 
@@ -37,11 +51,44 @@ link_file() {
     echo -e "  ${GREEN}🔗${NC} $dst → $src"
 }
 
-echo "🔗 심링크 확인 중..."
+# ============================================================
+# 심링크 제거 및 백업 복원
+# ============================================================
+do_restore() {
+    local src="$1"
+    local dst="$2"
 
-link_file "$DOTFILES_DIR/shell/.zshrc"             "$HOME/.zshrc"
-link_file "$DOTFILES_DIR/shell/.zprofile"          "$HOME/.zprofile"
-link_file "$DOTFILES_DIR/git/.gitconfig"           "$HOME/.gitconfig"
-link_file "$DOTFILES_DIR/git/.gitignore_global"    "$HOME/.gitignore_global"
+    # 심링크인 경우 제거
+    if [ -L "$dst" ]; then
+        rm "$dst"
+        echo -e "  ${RED}🗑️${NC} 심링크 제거: $dst"
+    fi
 
-echo "✅ 심링크 완료"
+    # 백업 파일이 있으면 복원
+    if [ -f "${dst}.bak" ]; then
+        mv "${dst}.bak" "$dst"
+        echo -e "  ${GREEN}↩️${NC} 복원됨: ${dst}.bak → $dst"
+    else
+        echo -e "  ${YELLOW}•${NC} $dst (백업 없음)"
+    fi
+}
+
+# ============================================================
+# 메인
+# ============================================================
+case "${1:-}" in
+    --restore|-r|restore)
+        echo "🔄 심링크 제거 및 백업 복원 중..."
+        for src in "${!SYMLINKS[@]}"; do
+            do_restore "$src" "${SYMLINKS[$src]}"
+        done
+        echo "✅ 복원 완료"
+        ;;
+    *)
+        echo "🔗 심링크 확인 중..."
+        for src in "${!SYMLINKS[@]}"; do
+            do_link "$src" "${SYMLINKS[$src]}"
+        done
+        echo "✅ 심링크 완료"
+        ;;
+esac

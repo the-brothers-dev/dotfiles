@@ -30,6 +30,6 @@ chmod +x "$DOTFILES_DIR/bootstrap.sh"
 chmod +x "$DOTFILES_DIR/scripts/"*.sh 2>/dev/null || true
 chmod +x "$DOTFILES_DIR/macos/"*.sh 2>/dev/null || true
 
-# 부트스트랩 실행
+# 부트스트랩 실행 (메뉴 없이 바로 설치)
 cd "$DOTFILES_DIR"
-exec ./bootstrap.sh
+exec ./bootstrap.sh install
