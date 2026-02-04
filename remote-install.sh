@@ -2,13 +2,13 @@
 # ============================================================
 #  원격 부트스트랩 - 아무것도 없는 맥에서 이것만 실행
 #
-#  bash <(curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/dotfiles/main/remote-install.sh)
+#  bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/main/remote-install.sh)
 #
 #  Git 없이 curl + tar만으로 동작 (macOS 기본 내장)
 # ============================================================
 set -euo pipefail
 
-REPO_TARBALL="https://github.com/YOUR_USERNAME/dotfiles/archive/main.tar.gz"
+REPO_TARBALL="https://github.com/the-brothers-dev/dotfiles/archive/main.tar.gz"
 DOTFILES_DIR="$HOME/.dotfiles"
 
 echo ""

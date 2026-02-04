@@ -4,11 +4,11 @@
 #
 #  사용법 (깨끗한 맥에서):
 #    xcode-select --install   # 먼저 실행 후 팝업 완료 대기
-#    git clone https://github.com/YOUR_USERNAME/dotfiles.git ~/.dotfiles
+#    git clone https://github.com/the-brothers-dev/dotfiles.git ~/.dotfiles
 #    cd ~/.dotfiles && ./bootstrap.sh
 #
 #  또는 원라이너:
-#    bash <(curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/dotfiles/main/remote-install.sh)
+#    bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/main/remote-install.sh)
 # ============================================================
 set -euo pipefail
 

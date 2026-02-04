@@ -17,7 +17,7 @@
 ### 방법 1: 원라이너 (권장)
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/dotfiles/main/remote-install.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/main/remote-install.sh)
 ```
 
 ### 방법 2: 수동
@@ -27,7 +27,7 @@ bash <(curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/dotfiles/main/
 xcode-select --install
 
 # 2. clone & 실행
-git clone https://github.com/YOUR_USERNAME/dotfiles.git ~/.dotfiles
+git clone https://github.com/the-brothers-dev/dotfiles.git ~/.dotfiles
 cd ~/.dotfiles && ./bootstrap.sh
 ```
 

@@ -13,7 +13,7 @@ macOS 개발 환경을 자동화하는 dotfiles 저장소입니다. 깨끗한 Ma
 ./bootstrap.sh
 
 # 원격 원라이너 설치
-bash <(curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/dotfiles/main/remote-install.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/main/remote-install.sh)
 
 # dotfiles 심링크만 재생성
 ./scripts/symlinks.sh
