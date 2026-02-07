@@ -95,7 +95,7 @@ do_install() {
         ok "모든 패키지 이미 설치됨"
     else
         log "누락된 패키지 설치 중... (시간이 걸릴 수 있습니다)"
-        brew bundle --file="$DOTFILES_DIR/Brewfile" --no-lock 2>&1 | while read -r line; do
+        brew bundle --file="$DOTFILES_DIR/Brewfile" 2>&1 | while read -r line; do
             echo "  $line"
         done
 
