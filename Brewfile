@@ -43,7 +43,7 @@ cask "claude-code"
 # Terminal emulator as alternative to Apple's Terminal app
 cask "iterm2"
 # Mesh VPN based on WireGuard
-cask "tailscale"
+cask "tailscale-app"
 # Development environments made easy
 cask "vagrant"
 # Virtualizer for x86 hardware
