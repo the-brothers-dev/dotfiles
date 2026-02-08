@@ -42,16 +42,16 @@ bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/ma
 먼저 `.env.example`을 복사하여 `.env` 파일을 생성하고 접속 정보를 입력합니다:
 ```bash
 cp .env.example .env
-# .env 파일 편집하여 REMOTE_USER, REMOTE_HOST, REMOTE_PASS, GIT_USER_NAME, GIT_USER_EMAIL 설정
+# .env 파일 편집하여 환경변수 설정
 ```
 
 ```bash
 # 환경변수 로드
 source .env
 
-# 완전 자동화 원라이너 (sudo + git 사용자 정보 자동 설정)
+# 완전 자동화 원라이너 (모든 프롬프트 자동 처리)
 sshpass -p "$REMOTE_PASS" ssh -t "$REMOTE_USER@$REMOTE_HOST" \
-  "SUDO_PASS='$REMOTE_PASS' GIT_USER_NAME='$GIT_USER_NAME' GIT_USER_EMAIL='$GIT_USER_EMAIL' bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/main/remote-install.sh)"
+  "SUDO_PASS='$REMOTE_PASS' GIT_USER_NAME='$GIT_USER_NAME' GIT_USER_EMAIL='$GIT_USER_EMAIL' CREATE_SSH_KEY='$CREATE_SSH_KEY' bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/main/remote-install.sh)"
 ```
 
 ### 4. Claude Code Bash에서 실행
@@ -63,10 +63,10 @@ Claude Code Bash는 **non-TTY** 환경이므로 `sshpass`가 직접 동작하지
 # 환경변수 로드
 source .env
 
-# expect로 원격 Mac에 완전 자동 설치 (SSH + sudo + git 사용자 자동 설정)
+# expect로 원격 Mac에 완전 자동 설치 (모든 프롬프트 자동 처리)
 expect << EXPECT_SCRIPT
 set timeout 600
-spawn ssh -t ${REMOTE_USER}@${REMOTE_HOST} "SUDO_PASS='${REMOTE_PASS}' GIT_USER_NAME='${GIT_USER_NAME}' GIT_USER_EMAIL='${GIT_USER_EMAIL}' bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/main/remote-install.sh)"
+spawn ssh -t ${REMOTE_USER}@${REMOTE_HOST} "SUDO_PASS='${REMOTE_PASS}' GIT_USER_NAME='${GIT_USER_NAME}' GIT_USER_EMAIL='${GIT_USER_EMAIL}' CREATE_SSH_KEY='${CREATE_SSH_KEY}' bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/main/remote-install.sh)"
 
 expect {
     -re "Password:|password:" {

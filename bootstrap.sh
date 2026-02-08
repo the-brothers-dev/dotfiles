@@ -172,24 +172,45 @@ do_install() {
     # 9. SSH 키
     log "SSH 키 확인 중..."
     if [ ! -f "$HOME/.ssh/id_ed25519" ]; then
-        echo ""
-        read -rp "  SSH 키를 생성할까요? (y/N): " CREATE_SSH
-        if [[ "$CREATE_SSH" =~ ^[Yy]$ ]]; then
-            SSH_EMAIL=$(git config --global user.email 2>/dev/null || echo "")
-            read -rp "  SSH 키 이메일 [$SSH_EMAIL]: " SSH_INPUT_EMAIL
-            SSH_EMAIL="${SSH_INPUT_EMAIL:-$SSH_EMAIL}"
-
-            ssh-keygen -t ed25519 -C "$SSH_EMAIL" -f "$HOME/.ssh/id_ed25519"
-            eval "$(ssh-agent -s)" >/dev/null
-            ssh-add "$HOME/.ssh/id_ed25519" 2>/dev/null
-
+        # 환경변수가 있으면 자동 처리
+        if [ -n "${CREATE_SSH_KEY:-}" ]; then
+            if [[ "$CREATE_SSH_KEY" =~ ^[Yy]$ ]]; then
+                SSH_EMAIL=$(git config --global user.email 2>/dev/null || echo "")
+                ssh-keygen -t ed25519 -C "$SSH_EMAIL" -f "$HOME/.ssh/id_ed25519" -N ""
+                eval "$(ssh-agent -s)" >/dev/null
+                ssh-add "$HOME/.ssh/id_ed25519" 2>/dev/null
+                ok "SSH 키 생성 완료"
+                echo ""
+                echo "  📋 아래 공개키를 GitHub에 등록하세요:"
+                echo "  ────────────────────────────────"
+                cat "$HOME/.ssh/id_ed25519.pub"
+                echo "  ────────────────────────────────"
+                echo "  https://github.com/settings/keys"
+                echo ""
+            else
+                ok "SSH 키 생성 건너뜀 (CREATE_SSH_KEY=n)"
+            fi
+        else
+            # 대화형 모드
             echo ""
-            echo "  📋 아래 공개키를 GitHub에 등록하세요:"
-            echo "  ────────────────────────────────"
-            cat "$HOME/.ssh/id_ed25519.pub"
-            echo "  ────────────────────────────────"
-            echo "  https://github.com/settings/keys"
-            echo ""
+            read -rp "  SSH 키를 생성할까요? (y/N): " CREATE_SSH
+            if [[ "$CREATE_SSH" =~ ^[Yy]$ ]]; then
+                SSH_EMAIL=$(git config --global user.email 2>/dev/null || echo "")
+                read -rp "  SSH 키 이메일 [$SSH_EMAIL]: " SSH_INPUT_EMAIL
+                SSH_EMAIL="${SSH_INPUT_EMAIL:-$SSH_EMAIL}"
+
+                ssh-keygen -t ed25519 -C "$SSH_EMAIL" -f "$HOME/.ssh/id_ed25519"
+                eval "$(ssh-agent -s)" >/dev/null
+                ssh-add "$HOME/.ssh/id_ed25519" 2>/dev/null
+
+                echo ""
+                echo "  📋 아래 공개키를 GitHub에 등록하세요:"
+                echo "  ────────────────────────────────"
+                cat "$HOME/.ssh/id_ed25519.pub"
+                echo "  ────────────────────────────────"
+                echo "  https://github.com/settings/keys"
+                echo ""
+            fi
         fi
     else
         ok "SSH 키 존재함"
