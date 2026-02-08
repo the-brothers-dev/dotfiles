@@ -10,6 +10,8 @@ brew "gh"
 brew "graphviz"
 # Fast, highly customisable system info script
 brew "neofetch"
+# Non-interactive ssh password auth
+brew "sshpass"
 
 # ------ CLI: Kubernetes ------
 # Kubernetes command-line interface
@@ -40,12 +42,9 @@ brew "zsh-syntax-highlighting"
 cask "claude-code"
 # Terminal emulator as alternative to Apple's Terminal app
 cask "iterm2"
-# Fast, light, simple Docker & Kubernetes on macOS
-cask "orbstack"
 # Mesh VPN based on WireGuard
 cask "tailscale"
-# Open-source code editor
-cask "visual-studio-code"
-
-# ------ VSCode Extensions ------
-vscode "anthropic.claude-code"
+# Development environments made easy
+cask "vagrant"
+# Virtualizer for x86 hardware
+cask "virtualbox"
