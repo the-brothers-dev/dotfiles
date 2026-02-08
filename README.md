@@ -1,4 +1,4 @@
-# 🚀 Mac 개발 환경 부트스트랩
+# Mac 개발 환경 부트스트랩
 
 아무것도 설치되지 않은 깨끗한 Mac에서 원클릭으로 전체 개발 환경을 구축합니다.
 
@@ -7,20 +7,41 @@
 | 카테고리 | 도구 |
 |---------|------|
 | **Kubernetes** | kubectl, helm, k9s, kind, krew, kubectx, kube-ps1, kubecolor |
-| **컨테이너** | OrbStack (Docker & Kubernetes) |
-| **개발 도구** | gh (GitHub CLI), graphviz, neofetch |
+| **가상화** | Vagrant, VirtualBox |
+| **개발 도구** | gh (GitHub CLI), graphviz, neofetch, sshpass |
 | **Shell** | Oh My Zsh (agnoster), zsh-autosuggestions, zsh-syntax-highlighting |
-| **GUI 앱** | iTerm2, VSCode, Tailscale |
-| **AI** | Claude Code (CLI + VSCode Extension) |
+| **GUI 앱** | iTerm2, Tailscale |
+| **AI** | Claude Code |
 
 ## 설치
 
-### 원라이너 (권장)
+### 원라이너 (대화형)
 
 초기화된 맥에서 터미널을 열고 실행:
 
 ```bash
 bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/main/remote-install.sh)
+```
+
+### 원라이너 (완전 자동화)
+
+모든 프롬프트를 환경변수로 자동 처리:
+
+```bash
+SUDO_PASS='비밀번호' \
+GIT_USER_NAME='이름' \
+GIT_USER_EMAIL='이메일' \
+CREATE_SSH_KEY='n' \
+bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/main/remote-install.sh)
+```
+
+### 다른 Mac에서 원격 설치
+
+```bash
+# .env 파일 설정 후
+source .env && sshpass -p "$REMOTE_PASS" ssh -t "$REMOTE_USER@$REMOTE_HOST" \
+  "SUDO_PASS='$REMOTE_PASS' GIT_USER_NAME='$GIT_USER_NAME' GIT_USER_EMAIL='$GIT_USER_EMAIL' CREATE_SSH_KEY='$CREATE_SSH_KEY' \
+  bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/main/remote-install.sh)"
 ```
 
 ### 수동 설치
@@ -44,6 +65,15 @@ cd ~/.dotfiles && ./bootstrap.sh install
 - Brewfile 패키지 제거 (선택)
 - Homebrew 제거 (선택)
 
+## 환경변수
+
+| 변수 | 설명 | 예시 |
+|------|------|------|
+| `SUDO_PASS` | sudo 비밀번호 (비대화형 모드) | `1234` |
+| `GIT_USER_NAME` | Git 사용자 이름 | `홍길동` |
+| `GIT_USER_EMAIL` | Git 사용자 이메일 | `user@example.com` |
+| `CREATE_SSH_KEY` | SSH 키 자동 생성 (y/n) | `n` |
+
 ## 사용법
 
 ```bash
@@ -59,6 +89,7 @@ cd ~/.dotfiles && ./bootstrap.sh install
 ├── bootstrap.sh          # 메인 스크립트 (설치/제거)
 ├── remote-install.sh     # 원격 원라이너용
 ├── Brewfile              # Homebrew 패키지 목록
+├── .env.example          # 환경변수 템플릿
 ├── shell/
 │   ├── .zshrc            # Zsh 설정 (Oh My Zsh, k8s alias)
 │   └── .zprofile         # 로그인 쉘 환경변수
@@ -68,8 +99,7 @@ cd ~/.dotfiles && ./bootstrap.sh install
 ├── macos/
 │   └── defaults.sh       # macOS 시스템 설정
 └── scripts/
-    ├── symlinks.sh       # dotfiles 심링크 관리
-    └── cleanup.sh        # 환경 완전 초기화
+    └── symlinks.sh       # dotfiles 심링크 관리
 ```
 
 ## 특징
@@ -77,6 +107,7 @@ cd ~/.dotfiles && ./bootstrap.sh install
 - **Idempotent**: 여러 번 실행해도 동일한 결과
 - **백업 & 복원**: 기존 설정 파일 자동 백업, 제거 시 복원
 - **선택적 제거**: 컴포넌트별로 제거 여부 선택 가능
+- **완전 자동화**: 환경변수로 모든 프롬프트 자동 처리 가능
 
 ## 커스터마이징
 
@@ -86,17 +117,3 @@ cd ~/.dotfiles && ./bootstrap.sh install
 | Shell 설정 | `shell/.zshrc` |
 | macOS 설정 | `macos/defaults.sh` |
 | Git 설정 | `git/.gitconfig` |
-
-## 테스트 사이클
-
-```
-시스템 설정 → 모든 콘텐츠 및 설정 지우기
-        ↓
-첫 로그인 → Wi-Fi 연결
-        ↓
-터미널 → 원라이너 실행
-        ↓
-검증 → 문제 수정 → push
-        ↓
-다시 리셋 → 반복
-```
