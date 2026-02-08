@@ -49,19 +49,45 @@ echo ""
 # 1. Xcode Command Line Tools 설치
 # ============================================================
 if ! xcode-select -p &>/dev/null; then
-    echo "📦 Xcode CLI Tools 설치 중..."
-    xcode-select --install
+    echo "📦 Xcode CLI Tools 설치 중... (자동 설치)"
 
-    echo ""
-    echo "⏳ Xcode CLI Tools 설치 팝업이 열렸습니다."
-    echo "   설치를 완료하면 자동으로 계속됩니다..."
-    echo ""
+    # softwareupdate를 사용한 비대화형 설치
+    touch /tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress
 
-    # 설치 완료 대기
-    until xcode-select -p &>/dev/null; do
-        sleep 5
-    done
-    echo "✅ Xcode CLI Tools 설치 완료"
+    # Command Line Tools 패키지 찾기 및 설치
+    CLT_PACKAGE=$(softwareupdate -l 2>/dev/null | grep -o "Command Line Tools for Xcode-[0-9.]*" | head -1 || true)
+
+    if [ -n "$CLT_PACKAGE" ]; then
+        echo "   설치 패키지: $CLT_PACKAGE"
+        if [ -n "${SUDO_PASS:-}" ]; then
+            echo "$SUDO_PASS" | sudo -S softwareupdate -i "$CLT_PACKAGE" --verbose
+        else
+            sudo softwareupdate -i "$CLT_PACKAGE" --verbose
+        fi
+    else
+        # 패키지를 찾지 못한 경우 전체 업데이트 시도
+        echo "   패키지 목록에서 찾지 못함, 전체 업데이트 시도..."
+        if [ -n "${SUDO_PASS:-}" ]; then
+            echo "$SUDO_PASS" | sudo -S softwareupdate -i -a
+        else
+            sudo softwareupdate -i -a
+        fi
+    fi
+
+    rm -f /tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress
+
+    # 설치 확인
+    if xcode-select -p &>/dev/null; then
+        echo "✅ Xcode CLI Tools 설치 완료"
+    else
+        echo "⚠️  Xcode CLI Tools 자동 설치 실패, 수동 설치 시도..."
+        xcode-select --install
+        echo "   설치 팝업을 완료해주세요..."
+        until xcode-select -p &>/dev/null; do
+            sleep 5
+        done
+        echo "✅ Xcode CLI Tools 설치 완료"
+    fi
     echo ""
 fi
 
