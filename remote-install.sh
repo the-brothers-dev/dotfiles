@@ -2,7 +2,11 @@
 # ============================================================
 #  원격 부트스트랩 - 아무것도 없는 맥에서 이것만 실행
 #
-#  bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/main/remote-install.sh)
+#  대화형 설치:
+#    bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/main/remote-install.sh)
+#
+#  비대화형 설치 (비밀번호 자동 입력):
+#    SUDO_PASS="비밀번호" bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/main/remote-install.sh)
 #
 #  Git 없이 curl + tar만으로 동작 (macOS 기본 내장)
 # ============================================================
@@ -16,14 +20,26 @@ echo "🚀 Mac 개발 환경 원격 설치 시작"
 echo ""
 
 # ============================================================
-# 0. sudo 권한 획득 (한 번만 입력)
+# 0. sudo 권한 획득
 # ============================================================
-echo "🔐 관리자 비밀번호가 필요합니다 (Homebrew 설치용)"
-sudo -v
+if [ -n "${SUDO_PASS:-}" ]; then
+    # 비대화형 모드: 환경변수로 비밀번호 전달
+    echo "🔐 sudo 권한 획득 중... (비대화형 모드)"
+    echo "$SUDO_PASS" | sudo -S -v 2>/dev/null
 
-# sudo 세션 유지 (백그라운드에서 갱신)
-while true; do sudo -n true; sleep 50; kill -0 "$$" 2>/dev/null || exit; done &
-SUDO_KEEPALIVE_PID=$!
+    # sudo 세션 유지 (백그라운드에서 갱신)
+    (while true; do echo "$SUDO_PASS" | sudo -S -v 2>/dev/null; sleep 50; kill -0 "$$" 2>/dev/null || exit; done) &
+    SUDO_KEEPALIVE_PID=$!
+else
+    # 대화형 모드: 사용자 입력
+    echo "🔐 관리자 비밀번호가 필요합니다 (Homebrew 설치용)"
+    sudo -v
+
+    # sudo 세션 유지 (백그라운드에서 갱신)
+    (while true; do sudo -n true; sleep 50; kill -0 "$$" 2>/dev/null || exit; done) &
+    SUDO_KEEPALIVE_PID=$!
+fi
+
 trap "kill $SUDO_KEEPALIVE_PID 2>/dev/null" EXIT
 
 echo "✅ sudo 권한 획득 완료"

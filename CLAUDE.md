@@ -49,11 +49,13 @@ cp .env.example .env
 # 환경변수 로드
 source .env
 
-# 방법 1: sshpass 사용 (brew install hudochenkov/sshpass/sshpass)
-sshpass -p "$REMOTE_PASS" ssh -t "$REMOTE_USER@$REMOTE_HOST" "bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/main/remote-install.sh)"
+# 완전 자동화 원라이너 (SUDO_PASS로 sudo 비밀번호 자동 입력)
+sshpass -p "$REMOTE_PASS" ssh -t "$REMOTE_USER@$REMOTE_HOST" \
+  "SUDO_PASS='$REMOTE_PASS' bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/main/remote-install.sh)"
 
-# 방법 2: SSH 원라이너 (비밀번호 직접 입력)
-ssh -t "$REMOTE_USER@$REMOTE_HOST" "bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/main/remote-install.sh)"
+# SSH 비밀번호만 자동 (sudo 비밀번호는 대화형)
+sshpass -p "$REMOTE_PASS" ssh -t "$REMOTE_USER@$REMOTE_HOST" \
+  "bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/main/remote-install.sh)"
 ```
 
 ### 4. Claude Code Bash에서 실행
@@ -65,23 +67,19 @@ Claude Code Bash는 **non-TTY** 환경이므로 `sshpass`가 직접 동작하지
 # 환경변수 로드
 source .env
 
-# expect로 원격 Mac에 설치 (비밀번호 자동 입력)
-expect -c "
+# expect로 원격 Mac에 완전 자동 설치 (SSH + sudo 비밀번호 자동 입력)
+expect << EXPECT_SCRIPT
 set timeout 600
-spawn ssh -t $REMOTE_USER@$REMOTE_HOST \"bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/main/remote-install.sh)\"
+spawn ssh -t ${REMOTE_USER}@${REMOTE_HOST} "SUDO_PASS='${REMOTE_PASS}' bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/main/remote-install.sh)"
 
 expect {
-    \"Password:\" {
-        send \"$REMOTE_PASS\r\"
-        exp_continue
-    }
-    \"password:\" {
-        send \"$REMOTE_PASS\r\"
+    -re "Password:|password:" {
+        send "${REMOTE_PASS}\r"
         exp_continue
     }
     eof
 }
-"
+EXPECT_SCRIPT
 
 # Git 커밋 및 푸시
 git add -A && git commit -m "메시지" && git push
