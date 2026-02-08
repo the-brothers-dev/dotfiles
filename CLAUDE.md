@@ -6,7 +6,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 macOS 개발 환경을 자동화하는 dotfiles 저장소입니다. 깨끗한 Mac에서 원클릭으로 Kubernetes, 개발 도구, 쉘 설정 등을 설치하고, 필요시 설치 전 상태로 복원할 수 있습니다.
 
-## 주요 명령어
+## 명령어 가이드
+
+### 1. 설치할 원격 Mac에서 직접 실행
+
+```bash
+# 원라이너 설치 (초기화된 Mac에서)
+bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/main/remote-install.sh)
+```
+
+### 2. iTerm2 / Zsh에서 실행 (로컬)
 
 ```bash
 # 메뉴 표시 (설치/제거 선택)
@@ -18,9 +27,6 @@ macOS 개발 환경을 자동화하는 dotfiles 저장소입니다. 깨끗한 Ma
 # 제거 (설치 전 상태로 복원)
 ./bootstrap.sh uninstall
 
-# 원격 원라이너 설치 (초기화된 Mac용)
-bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/main/remote-install.sh)
-
 # 심링크만 재생성
 ./scripts/symlinks.sh
 
@@ -29,6 +35,37 @@ bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/ma
 
 # macOS 시스템 설정만 적용
 ./macos/defaults.sh
+
+# 원격 Mac에 SSH로 설치 (sshpass 필요)
+sshpass -p 'PASSWORD' ssh -t user@host "bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/main/remote-install.sh)"
+```
+
+### 3. Claude Code Bash에서 실행
+
+Claude Code Bash는 **non-TTY** 환경이므로 `sshpass`가 직접 동작하지 않습니다.
+`expect`를 사용하여 원격 설치를 자동화할 수 있습니다.
+
+```bash
+# expect로 원격 Mac에 설치 (비밀번호 자동 입력)
+expect -c '
+set timeout 600
+spawn ssh -t user@host "bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/main/remote-install.sh)"
+
+expect {
+    "Password:" {
+        send "PASSWORD\r"
+        exp_continue
+    }
+    "password:" {
+        send "PASSWORD\r"
+        exp_continue
+    }
+    eof
+}
+'
+
+# Git 커밋 및 푸시
+git add -A && git commit -m "메시지" && git push
 ```
 
 ## 아키텍처
@@ -36,9 +73,10 @@ bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/ma
 ### 설치 흐름
 ```
 remote-install.sh (원라이너, curl+tar)
+    └─→ sudo 비밀번호 입력 (한 번만)
+    └─→ Xcode CLI Tools 설치 (팝업)
     └─→ bootstrap.sh install
-            ├─→ Xcode CLI Tools 확인
-            ├─→ Homebrew 설치
+            ├─→ Homebrew 설치 (NONINTERACTIVE)
             ├─→ Brewfile 패키지 설치 (변경분만)
             ├─→ Oh My Zsh 설치
             ├─→ symlinks.sh (심링크, 이미 설정됨이면 건너뜀)
@@ -94,3 +132,8 @@ bootstrap.sh uninstall
 | Shell | `shell/.zshrc` | Oh My Zsh, alias, PATH |
 | macOS | `macos/defaults.sh` | Dock, Finder, 키보드 설정 |
 | Git | `git/.gitconfig` | Git 기본 설정 |
+
+## 테스트 환경
+
+- 원격 Mac: `ssh hyunmo@192.168.0.28` (비밀번호: `1q2w3e4r!@`)
+- Claude Code Bash에서는 `expect` 사용 필요 (TTY 없음)
