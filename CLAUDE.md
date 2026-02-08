@@ -35,12 +35,24 @@ bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/ma
 
 # macOS 시스템 설정만 적용
 ./macos/defaults.sh
-
-# 원격 Mac에 SSH로 설치 (sshpass 필요)
-sshpass -p 'PASSWORD' ssh -t user@host "bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/main/remote-install.sh)"
 ```
 
-### 3. Claude Code Bash에서 실행
+### 3. 다른 Mac에서 원격 Mac으로 설치 (Zsh/iTerm2)
+
+```bash
+# 방법 1: sshpass 사용 (brew install hudochenkov/sshpass/sshpass)
+sshpass -p 'PASSWORD' ssh -t user@host "bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/main/remote-install.sh)"
+
+# 방법 2: SSH 접속 후 직접 실행
+ssh user@host
+# 비밀번호 입력 후
+bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/main/remote-install.sh)
+
+# 예시 (테스트 환경)
+sshpass -p '1q2w3e4r!@' ssh -t hyunmo@192.168.0.28 "bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/main/remote-install.sh)"
+```
+
+### 4. Claude Code Bash에서 실행
 
 Claude Code Bash는 **non-TTY** 환경이므로 `sshpass`가 직접 동작하지 않습니다.
 `expect`를 사용하여 원격 설치를 자동화할 수 있습니다.
