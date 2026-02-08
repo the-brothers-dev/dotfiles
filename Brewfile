@@ -42,6 +42,8 @@ brew "zsh-syntax-highlighting"
 cask "antigravity"
 # Web browser
 cask "google-chrome"
+# Note-taking and collaboration
+cask "notion"
 # Terminal-based AI coding assistant
 cask "claude-code"
 # Terminal emulator as alternative to Apple's Terminal app
