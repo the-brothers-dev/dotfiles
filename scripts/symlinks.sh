@@ -15,12 +15,18 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m'
 
-# 심링크 대상 목록
-declare -A SYMLINKS=(
-    ["$DOTFILES_DIR/shell/.zshrc"]="$HOME/.zshrc"
-    ["$DOTFILES_DIR/shell/.zprofile"]="$HOME/.zprofile"
-    ["$DOTFILES_DIR/git/.gitconfig"]="$HOME/.gitconfig"
-    ["$DOTFILES_DIR/git/.gitignore_global"]="$HOME/.gitignore_global"
+# 심링크 대상 목록 (macOS 기본 bash 3.x 호환)
+SOURCES=(
+    "$DOTFILES_DIR/shell/.zshrc"
+    "$DOTFILES_DIR/shell/.zprofile"
+    "$DOTFILES_DIR/git/.gitconfig"
+    "$DOTFILES_DIR/git/.gitignore_global"
+)
+TARGETS=(
+    "$HOME/.zshrc"
+    "$HOME/.zprofile"
+    "$HOME/.gitconfig"
+    "$HOME/.gitignore_global"
 )
 
 # ============================================================
@@ -79,15 +85,15 @@ do_restore() {
 case "${1:-}" in
     --restore|-r|restore)
         echo "🔄 심링크 제거 및 백업 복원 중..."
-        for src in "${!SYMLINKS[@]}"; do
-            do_restore "$src" "${SYMLINKS[$src]}"
+        for i in "${!SOURCES[@]}"; do
+            do_restore "${SOURCES[$i]}" "${TARGETS[$i]}"
         done
         echo "✅ 복원 완료"
         ;;
     *)
         echo "🔗 심링크 확인 중..."
-        for src in "${!SYMLINKS[@]}"; do
-            do_link "$src" "${SYMLINKS[$src]}"
+        for i in "${!SOURCES[@]}"; do
+            do_link "${SOURCES[$i]}" "${TARGETS[$i]}"
         done
         echo "✅ 심링크 완료"
         ;;
