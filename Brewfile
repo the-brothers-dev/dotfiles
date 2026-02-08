@@ -3,9 +3,6 @@
 # Usage: brew bundle --file=Brewfile
 # ============================================================
 
-# ------ Taps ------
-tap "homebrew/cask"
-
 # ------ CLI: 기본 도구 ------
 # GitHub command-line tool
 brew "gh"
