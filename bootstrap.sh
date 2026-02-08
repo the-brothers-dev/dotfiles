@@ -131,19 +131,27 @@ do_install() {
     CURRENT_EMAIL=$(git config --global user.email 2>/dev/null || echo "")
 
     if [ -z "$CURRENT_NAME" ] || [ -z "$CURRENT_EMAIL" ]; then
-        echo ""
-        echo "  Git 사용자 정보를 입력해주세요:"
+        # 환경변수가 있으면 자동 설정 (비대화형 모드)
+        if [ -n "${GIT_USER_NAME:-}" ] && [ -n "${GIT_USER_EMAIL:-}" ]; then
+            git config --global user.name "$GIT_USER_NAME"
+            git config --global user.email "$GIT_USER_EMAIL"
+            ok "Git 사용자 설정 완료: $GIT_USER_NAME <$GIT_USER_EMAIL>"
+        else
+            # 대화형 모드
+            echo ""
+            echo "  Git 사용자 정보를 입력해주세요:"
 
-        if [ -z "$CURRENT_NAME" ]; then
-            read -rp "  이름: " GIT_NAME
-            git config --global user.name "$GIT_NAME"
-        fi
+            if [ -z "$CURRENT_NAME" ]; then
+                read -rp "  이름: " GIT_NAME
+                git config --global user.name "$GIT_NAME"
+            fi
 
-        if [ -z "$CURRENT_EMAIL" ]; then
-            read -rp "  이메일: " GIT_EMAIL
-            git config --global user.email "$GIT_EMAIL"
+            if [ -z "$CURRENT_EMAIL" ]; then
+                read -rp "  이메일: " GIT_EMAIL
+                git config --global user.email "$GIT_EMAIL"
+            fi
+            ok "Git 사용자 설정 완료"
         fi
-        ok "Git 사용자 설정 완료"
     else
         ok "Git 사용자: $CURRENT_NAME <$CURRENT_EMAIL>"
     fi
