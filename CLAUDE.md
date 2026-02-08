@@ -39,15 +39,21 @@ bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/ma
 
 ### 3. 다른 Mac에서 원격 Mac으로 설치 (Zsh/iTerm2)
 
+먼저 `.env.example`을 복사하여 `.env` 파일을 생성하고 접속 정보를 입력합니다:
 ```bash
+cp .env.example .env
+# .env 파일 편집하여 REMOTE_USER, REMOTE_HOST, REMOTE_PASS 설정
+```
+
+```bash
+# 환경변수 로드
+source .env
+
 # 방법 1: sshpass 사용 (brew install hudochenkov/sshpass/sshpass)
-sshpass -p 'PASSWORD' ssh -t user@host "bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/main/remote-install.sh)"
+sshpass -p "$REMOTE_PASS" ssh -t "$REMOTE_USER@$REMOTE_HOST" "bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/main/remote-install.sh)"
 
 # 방법 2: SSH 원라이너 (비밀번호 직접 입력)
-ssh -t user@host "bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/main/remote-install.sh)"
-
-# 예시 (테스트 환경)
-sshpass -p '1q2w3e4r!@' ssh -t hyunmo@192.168.0.28 "bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/main/remote-install.sh)"
+ssh -t "$REMOTE_USER@$REMOTE_HOST" "bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/main/remote-install.sh)"
 ```
 
 ### 4. Claude Code Bash에서 실행
@@ -56,23 +62,26 @@ Claude Code Bash는 **non-TTY** 환경이므로 `sshpass`가 직접 동작하지
 `expect`를 사용하여 원격 설치를 자동화할 수 있습니다.
 
 ```bash
+# 환경변수 로드
+source .env
+
 # expect로 원격 Mac에 설치 (비밀번호 자동 입력)
-expect -c '
+expect -c "
 set timeout 600
-spawn ssh -t user@host "bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/main/remote-install.sh)"
+spawn ssh -t $REMOTE_USER@$REMOTE_HOST \"bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/main/remote-install.sh)\"
 
 expect {
-    "Password:" {
-        send "PASSWORD\r"
+    \"Password:\" {
+        send \"$REMOTE_PASS\r\"
         exp_continue
     }
-    "password:" {
-        send "PASSWORD\r"
+    \"password:\" {
+        send \"$REMOTE_PASS\r\"
         exp_continue
     }
     eof
 }
-'
+"
 
 # Git 커밋 및 푸시
 git add -A && git commit -m "메시지" && git push
@@ -145,5 +154,6 @@ bootstrap.sh uninstall
 
 ## 테스트 환경
 
-- 원격 Mac: `ssh hyunmo@192.168.0.28` (비밀번호: `1q2w3e4r!@`)
+- 원격 Mac 접속 정보: `.env` 파일에 저장 (git에서 제외됨)
+- `.env.example`을 복사하여 `.env` 생성 후 사용
 - Claude Code Bash에서는 `expect` 사용 필요 (TTY 없음)
