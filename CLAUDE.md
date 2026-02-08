@@ -43,10 +43,8 @@ bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/ma
 # 방법 1: sshpass 사용 (brew install hudochenkov/sshpass/sshpass)
 sshpass -p 'PASSWORD' ssh -t user@host "bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/main/remote-install.sh)"
 
-# 방법 2: SSH 접속 후 직접 실행
-ssh user@host
-# 비밀번호 입력 후
-bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/main/remote-install.sh)
+# 방법 2: SSH 원라이너 (비밀번호 직접 입력)
+ssh -t user@host "bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/main/remote-install.sh)"
 
 # 예시 (테스트 환경)
 sshpass -p '1q2w3e4r!@' ssh -t hyunmo@192.168.0.28 "bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/main/remote-install.sh)"
