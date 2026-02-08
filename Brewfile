@@ -38,6 +38,8 @@ brew "zsh-autosuggestions"
 brew "zsh-syntax-highlighting"
 
 # ------ GUI Apps ------
+# AI Coding Agent IDE
+cask "antigravity"
 # Terminal-based AI coding assistant
 cask "claude-code"
 # Terminal emulator as alternative to Apple's Terminal app
