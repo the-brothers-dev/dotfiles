@@ -57,5 +57,10 @@ fi
 # ------ chezmoi ------
 export PATH="$HOME/.local/bin:$PATH"
 
+# ------ direnv (디렉토리별 환경변수 자동 로드) ------
+if command -v direnv &>/dev/null; then
+    eval "$(direnv hook zsh)"
+fi
+
 # ------ 추가 환경 설정 ------
 [ -f "$HOME/.local/bin/env" ] && . "$HOME/.local/bin/env"

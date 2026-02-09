@@ -1,0 +1,41 @@
+#!/bin/bash
+# ============================================================
+# 프로젝트 디렉토리 구조 설정
+# - .kube, .aws 디렉토리 생성 및 권한 설정
+# - direnv 허용
+# ============================================================
+set -euo pipefail
+
+PROJECTS_DIR="$HOME/Projects"
+
+echo "📁 프로젝트 디렉토리 권한 설정 중..."
+
+# 각 컨텍스트별 credential 디렉토리 생성 및 권한 설정
+for ctx in personal work community/thebrothers; do
+    ctx_dir="$PROJECTS_DIR/$ctx"
+
+    if [ -d "$ctx_dir" ]; then
+        mkdir -p "$ctx_dir/.kube"
+        mkdir -p "$ctx_dir/.aws"
+
+        # 권한 설정 (credential 보호)
+        chmod 700 "$ctx_dir/.kube"
+        chmod 700 "$ctx_dir/.aws"
+
+        # direnv 허용 (envrc가 있으면)
+        if [ -f "$ctx_dir/.envrc" ] && command -v direnv &>/dev/null; then
+            direnv allow "$ctx_dir" 2>/dev/null || true
+        fi
+    fi
+done
+
+echo "✅ 프로젝트 디렉토리 설정 완료"
+echo ""
+echo "   ~/Projects/"
+echo "   ├── personal/        # 개인 프로젝트"
+echo "   ├── work/            # 회사/외주 프로젝트"
+echo "   └── community/"
+echo "       └── thebrothers/ # 모임 프로젝트"
+echo ""
+echo "   각 디렉토리에서 Git user 자동 전환됨"
+echo "   .envrc로 KUBECONFIG, AWS 자동 전환됨"

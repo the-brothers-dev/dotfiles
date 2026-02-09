@@ -1,0 +1,20 @@
+# ============================================================
+# Work 환경 설정
+# direnv가 이 디렉토리 진입 시 자동 로드
+# 활성화: direnv allow
+#
+# 회사별로 세분화하려면:
+#   work/company-a/.envrc
+#   work/company-b/.envrc
+# ============================================================
+
+# Kubernetes
+export KUBECONFIG="$HOME/Projects/work/.kube/config"
+
+# AWS
+export AWS_CONFIG_FILE="$HOME/Projects/work/.aws/config"
+export AWS_SHARED_CREDENTIALS_FILE="$HOME/Projects/work/.aws/credentials"
+# export AWS_PROFILE="work"
+
+# Docker (필요시)
+# export DOCKER_CONFIG="$HOME/Projects/work/.docker"

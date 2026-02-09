@@ -35,3 +35,16 @@
 
 [color]
     ui = auto
+
+# ============================================================
+# 디렉토리별 Git 설정 (Conditional Includes)
+# 각 디렉토리의 .gitconfig에서 user.name, user.email 오버라이드
+# ============================================================
+[includeIf "gitdir:~/Projects/personal/"]
+    path = ~/Projects/personal/.gitconfig
+
+[includeIf "gitdir:~/Projects/work/"]
+    path = ~/Projects/work/.gitconfig
+
+[includeIf "gitdir:~/Projects/community/thebrothers/"]
+    path = ~/Projects/community/thebrothers/.gitconfig

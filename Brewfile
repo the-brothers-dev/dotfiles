@@ -4,6 +4,8 @@
 # ============================================================
 
 # ------ CLI: 기본 도구 ------
+# Load/unload environment variables based on $PWD
+brew "direnv"
 # GitHub command-line tool
 brew "gh"
 # Graph visualization software from AT&T and Bell Labs
