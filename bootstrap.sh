@@ -10,11 +10,15 @@
 #  원라이너:
 #    bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/main/remote-install.sh)
 #
-#  환경변수 (비대화형 설치용):
-#    CHEZMOI_NAME         - Git 사용자 이름
-#    CHEZMOI_EMAIL        - Git 이메일
-#    INFISICAL_TOKEN      - Infisical 서비스 토큰
-#    INFISICAL_PROJECT_ID - Infisical 프로젝트 ID
+#  환경변수 (.env 파일에 설정):
+#    INFISICAL_CLIENT_ID     - Infisical Universal Auth Client ID
+#    INFISICAL_CLIENT_SECRET - Infisical Universal Auth Client Secret
+#    INFISICAL_PROJECT_ID    - Infisical 프로젝트 ID
+#    INFISICAL_ENV           - Infisical 환경 (dev/staging/prod)
+#
+#  Infisical에서 관리되는 시크릿:
+#    CHEZMOI_NAME, CHEZMOI_EMAIL, CREATE_SSH_KEY, ANTHROPIC_API_KEY
+#    REMOTE_USER, REMOTE_HOST, REMOTE_PASS
 # ============================================================
 set -euo pipefail
 
@@ -35,6 +39,64 @@ err()  { echo -e "${RED}[❌]${NC} $1"; }
 DOTFILES_DIR="$HOME/.dotfiles"
 DOTFILES_REPO="https://github.com/the-brothers-dev/dotfiles.git"
 LOG_FILE="$HOME/.dotfiles-bootstrap.log"
+
+# ============================================================
+# Infisical에서 시크릿 가져오기
+# ============================================================
+fetch_infisical_secrets() {
+    local client_id="${INFISICAL_CLIENT_ID:-}"
+    local client_secret="${INFISICAL_CLIENT_SECRET:-}"
+    local project_id="${INFISICAL_PROJECT_ID:-}"
+    local env="${INFISICAL_ENV:-dev}"
+    local url="${INFISICAL_URL:-https://app.infisical.com}"
+
+    if [ -z "$client_id" ] || [ -z "$client_secret" ] || [ -z "$project_id" ]; then
+        return 1
+    fi
+
+    log "Infisical에서 시크릿 가져오는 중..."
+
+    # Universal Auth로 토큰 획득
+    local token_response
+    token_response=$(curl -s -X POST "${url}/api/v1/auth/universal-auth/login" \
+        -H 'Content-Type: application/x-www-form-urlencoded' \
+        --data-urlencode "clientId=$client_id" \
+        --data-urlencode "clientSecret=$client_secret" 2>/dev/null)
+
+    local access_token
+    access_token=$(echo "$token_response" | grep -o '"accessToken":"[^"]*"' | cut -d'"' -f4)
+
+    if [ -z "$access_token" ]; then
+        warn "Infisical 인증 실패"
+        return 1
+    fi
+
+    # 시크릿 조회
+    local secrets_response
+    secrets_response=$(curl -s "${url}/api/v3/secrets/raw?workspaceId=${project_id}&environment=${env}&secretPath=/" \
+        -H "Authorization: Bearer $access_token" 2>/dev/null)
+
+    # 시크릿을 환경변수로 내보내기
+    local secrets_count=0
+    while IFS= read -r line; do
+        local key value
+        key=$(echo "$line" | cut -d'|' -f1)
+        value=$(echo "$line" | cut -d'|' -f2-)
+        if [ -n "$key" ]; then
+            export "$key=$value"
+            ((secrets_count++))
+        fi
+    done < <(echo "$secrets_response" | grep -o '"secretKey":"[^"]*","secretValue":"[^"]*"' | \
+        sed 's/"secretKey":"//;s/","secretValue":"/|/;s/"$//')
+
+    if [ "$secrets_count" -gt 0 ]; then
+        ok "Infisical에서 ${secrets_count}개 시크릿 로드됨"
+        return 0
+    else
+        warn "Infisical에서 시크릿을 찾을 수 없음"
+        return 1
+    fi
+}
 
 # ============================================================
 # 메뉴 표시
@@ -70,10 +132,15 @@ do_install() {
 
     echo ""
     echo "============================================"
-    echo "  🚀 Mac 개발 환경 설치 (chezmoi)"
+    echo "  🚀 Mac 개발 환경 설치 (chezmoi + Infisical)"
     echo "  $(date)"
     echo "============================================"
     echo ""
+
+    # 0. Infisical에서 시크릿 로드 (선택)
+    if [ -n "${INFISICAL_CLIENT_ID:-}" ]; then
+        fetch_infisical_secrets || true
+    fi
 
     # 1. Xcode Command Line Tools
     log "Xcode CLI Tools 확인 중..."
@@ -123,7 +190,7 @@ do_install() {
     # 4. chezmoi 초기화 및 적용
     log "chezmoi 초기화 중..."
 
-    # 비대화형 모드: 환경변수로 데이터 설정
+    # 비대화형 모드: 환경변수로 데이터 설정 (Infisical에서 로드됨)
     if [ -n "${CHEZMOI_NAME:-}" ] && [ -n "${CHEZMOI_EMAIL:-}" ]; then
         # chezmoi 데이터 파일 생성
         mkdir -p "$HOME/.config/chezmoi"
@@ -133,9 +200,9 @@ do_install() {
     email = "${CHEZMOI_EMAIL}"
 
 [data.infisical]
-    enabled = $( [ -n "${INFISICAL_TOKEN:-}" ] && echo "true" || echo "false" )
-$( [ -n "${INFISICAL_PROJECT_ID:-}" ] && echo "    project_id = \"${INFISICAL_PROJECT_ID}\"" )
-$( [ -n "${INFISICAL_ENV:-}" ] && echo "    env = \"${INFISICAL_ENV}\"" )
+    enabled = true
+    project_id = "${INFISICAL_PROJECT_ID:-}"
+    env = "${INFISICAL_ENV:-dev}"
 
 [edit]
     command = "agy"
@@ -154,24 +221,13 @@ EOF
     fi
     ok "chezmoi 적용 완료"
 
-    # 5. Infisical 초기화 (선택)
-    if [ -n "${INFISICAL_TOKEN:-}" ]; then
-        log "Infisical 연결 확인 중..."
-        export INFISICAL_TOKEN
-        if command -v infisical &>/dev/null && infisical user &>/dev/null; then
-            ok "Infisical 연결됨"
-        else
-            warn "Infisical 연결 실패 - 나중에 'infisical login'으로 설정하세요"
-        fi
-    fi
-
-    # 6. Antigravity 설정
+    # 5. Antigravity 설정
     if [ -f "$DOTFILES_DIR/antigravity/setup.sh" ]; then
         log "Antigravity 설정 중..."
         bash "$DOTFILES_DIR/antigravity/setup.sh"
     fi
 
-    # 7. Claude Code API 키 설정
+    # 6. Claude Code API 키 설정 (Infisical에서 로드됨)
     if [ -n "${ANTHROPIC_API_KEY:-}" ]; then
         log "Claude Code API 키 설정 중..."
         if command -v claude &>/dev/null; then
@@ -183,7 +239,7 @@ EOF
         fi
     fi
 
-    # 8. SSH 키
+    # 7. SSH 키
     log "SSH 키 확인 중..."
     if [ ! -f "$HOME/.ssh/id_ed25519" ]; then
         if [ -n "${CREATE_SSH_KEY:-}" ]; then
@@ -315,15 +371,16 @@ do_uninstall() {
         if [[ "$REMOVE_BREW_PKGS" =~ ^[Yy]$ ]]; then
             log "Brewfile 패키지 제거 중..."
 
-            if [ -f "$DOTFILES_DIR/Brewfile" ]; then
-                grep '^cask ' "$DOTFILES_DIR/Brewfile" | sed 's/cask "//;s/"//' | while read -r cask; do
+            BREWFILE="$DOTFILES_DIR/home/Brewfile"
+            if [ -f "$BREWFILE" ]; then
+                grep '^cask ' "$BREWFILE" | sed 's/cask "//;s/"//' | while read -r cask; do
                     if brew list --cask "$cask" &>/dev/null; then
                         echo "  제거: $cask"
                         brew uninstall --cask "$cask" 2>/dev/null || true
                     fi
                 done
 
-                grep '^brew ' "$DOTFILES_DIR/Brewfile" | sed 's/brew "//;s/"//' | while read -r formula; do
+                grep '^brew ' "$BREWFILE" | sed 's/brew "//;s/"//' | while read -r formula; do
                     if brew list "$formula" &>/dev/null; then
                         echo "  제거: $formula"
                         brew uninstall "$formula" 2>/dev/null || true

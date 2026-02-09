@@ -24,15 +24,15 @@
 bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/main/remote-install.sh)
 ```
 
-### 원라이너 (완전 자동화)
+### 원라이너 (완전 자동화 - Infisical 사용)
 
-모든 프롬프트를 환경변수로 자동 처리:
+Infisical에서 모든 시크릿을 자동으로 가져옴:
 
 ```bash
+INFISICAL_CLIENT_ID='xxx' \
+INFISICAL_CLIENT_SECRET='xxx' \
+INFISICAL_PROJECT_ID='xxx' \
 SUDO_PASS='비밀번호' \
-CHEZMOI_NAME='이름' \
-CHEZMOI_EMAIL='이메일' \
-CREATE_SSH_KEY='n' \
 bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/main/remote-install.sh)
 ```
 
@@ -59,15 +59,27 @@ cd ~/.dotfiles && ./bootstrap.sh install
 
 ## 환경변수
 
-| 변수 | 설명 | 예시 |
-|------|------|------|
-| `SUDO_PASS` | sudo 비밀번호 (비대화형) | `1234` |
-| `CHEZMOI_NAME` | Git 사용자 이름 | `홍길동` |
-| `CHEZMOI_EMAIL` | Git 사용자 이메일 | `user@example.com` |
-| `CREATE_SSH_KEY` | SSH 키 자동 생성 (y/n) | `n` |
-| `ANTHROPIC_API_KEY` | Claude Code API 키 | `sk-ant-...` |
-| `INFISICAL_TOKEN` | Infisical 서비스 토큰 | (선택) |
-| `INFISICAL_PROJECT_ID` | Infisical 프로젝트 ID | (선택) |
+### 로컬 설정 (.env 파일)
+
+| 변수 | 설명 |
+|------|------|
+| `INFISICAL_CLIENT_ID` | Infisical Universal Auth Client ID |
+| `INFISICAL_CLIENT_SECRET` | Infisical Universal Auth Client Secret |
+| `INFISICAL_PROJECT_ID` | Infisical 프로젝트 ID |
+| `INFISICAL_ENV` | Infisical 환경 (dev/staging/prod) |
+| `SUDO_PASS` | sudo 비밀번호 (비대화형 설치용) |
+
+### Infisical에서 관리되는 시크릿
+
+| 변수 | 설명 |
+|------|------|
+| `CHEZMOI_NAME` | Git 사용자 이름 |
+| `CHEZMOI_EMAIL` | Git 사용자 이메일 |
+| `CREATE_SSH_KEY` | SSH 키 자동 생성 (y/n) |
+| `ANTHROPIC_API_KEY` | Claude Code API 키 |
+| `REMOTE_USER` | 원격 Mac 사용자명 |
+| `REMOTE_HOST` | 원격 Mac 호스트 |
+| `REMOTE_PASS` | 원격 Mac 비밀번호 |
 
 ## 사용법
 

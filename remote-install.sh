@@ -5,8 +5,12 @@
 #  대화형 설치:
 #    bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/main/remote-install.sh)
 #
-#  비대화형 설치 (비밀번호 자동 입력):
-#    SUDO_PASS="비밀번호" bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/main/remote-install.sh)
+#  비대화형 설치 (Infisical 사용):
+#    INFISICAL_CLIENT_ID="xxx" \
+#    INFISICAL_CLIENT_SECRET="xxx" \
+#    INFISICAL_PROJECT_ID="xxx" \
+#    SUDO_PASS="비밀번호" \
+#    bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/main/remote-install.sh)
 #
 #  Git 없이 curl + tar만으로 동작 (macOS 기본 내장)
 # ============================================================
@@ -105,8 +109,7 @@ curl -fsSL "$REPO_TARBALL" | tar xz -C "$DOTFILES_DIR" --strip-components=1
 
 # 실행 권한
 chmod +x "$DOTFILES_DIR/bootstrap.sh"
-chmod +x "$DOTFILES_DIR/scripts/"*.sh 2>/dev/null || true
-chmod +x "$DOTFILES_DIR/macos/"*.sh 2>/dev/null || true
+chmod +x "$DOTFILES_DIR/antigravity/"*.sh 2>/dev/null || true
 
 # ============================================================
 # 3. 부트스트랩 실행
