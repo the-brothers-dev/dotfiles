@@ -15,11 +15,14 @@ brew "neofetch"
 # Non-interactive ssh password auth
 brew "sshpass"
 
+# ------ Taps ------
+tap "infisical/get-cli"
+
 # ------ CLI: Dotfiles & 시크릿 관리 ------
 # Manage your dotfiles across multiple machines
 brew "chezmoi"
-# Tool for managing secrets
-brew "vault"
+# Infisical CLI for secrets management
+brew "infisical/get-cli/infisical"
 
 # ------ CLI: Kubernetes ------
 # Kubernetes command-line interface

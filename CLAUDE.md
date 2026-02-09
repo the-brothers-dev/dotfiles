@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 저장소 개요
 
-macOS 개발 환경을 자동화하는 dotfiles 저장소입니다. **chezmoi**로 dotfiles를 관리하고, **HashiCorp Vault**로 시크릿을 관리합니다.
+macOS 개발 환경을 자동화하는 dotfiles 저장소입니다. **chezmoi**로 dotfiles를 관리하고, **Infisical**로 시크릿을 관리합니다.
 
 ## 환경변수
 
@@ -18,8 +18,9 @@ macOS 개발 환경을 자동화하는 dotfiles 저장소입니다. **chezmoi**�
 | `CHEZMOI_EMAIL` | Git 이메일 | chezmoi 데이터 |
 | `CREATE_SSH_KEY` | SSH 키 생성 여부 (y/n) | 자동 설정 |
 | `ANTHROPIC_API_KEY` | Claude Code API 키 | Pro/Team 사용자 |
-| `VAULT_ADDR` | Vault 서버 주소 | 시크릿 관리 |
-| `VAULT_TOKEN` | Vault 인증 토큰 | 시크릿 관리 |
+| `INFISICAL_TOKEN` | Infisical 서비스 토큰 | 시크릿 관리 |
+| `INFISICAL_PROJECT_ID` | Infisical 프로젝트 ID | 시크릿 관리 |
+| `INFISICAL_ENV` | Infisical 환경 | dev/staging/prod |
 
 ## 명령어 가이드
 
@@ -94,8 +95,9 @@ remote-install.sh
             │       ├─→ Oh My Zsh 다운로드 (.chezmoiexternal)
             │       ├─→ Brewfile 패키지 설치 (.chezmoiscripts)
             │       ├─→ macOS 설정 적용 (.chezmoiscripts)
+            │       ├─→ 프로젝트 디렉토리 구조 생성
             │       └─→ dotfiles 심링크/복사
-            ├─→ Vault 연결 (선택)
+            ├─→ Infisical 연결 (선택)
             ├─→ Antigravity 설정
             ├─→ Claude Code API 키 설정
             └─→ SSH 키 생성 (선택)
@@ -113,14 +115,32 @@ remote-install.sh
 │   ├── .chezmoiexternal.toml # 외부 리소스 (Oh My Zsh)
 │   ├── .chezmoiscripts/      # 실행 스크립트
 │   ├── dot_zshrc.tmpl        # .zshrc 템플릿
-│   ├── dot_zprofile.tmpl     # .zprofile 템플릿
-│   ├── dot_gitconfig.tmpl    # .gitconfig 템플릿
-│   └── dot_gitignore_global  # .gitignore_global
+│   ├── dot_gitconfig.tmpl    # .gitconfig 템플릿 (conditional includes)
+│   ├── private_Projects/     # 프로젝트 디렉토리 템플릿
+│   └── ...
 ├── secrets/              # 시크릿 프로바이더
 │   ├── provider.sh       # 추상화 레이어
-│   └── vault.sh          # Vault 구현
+│   └── infisical.sh      # Infisical 구현
 ├── antigravity/          # Antigravity IDE 설정
 └── macos/                # macOS 설정 (레거시)
+```
+
+### 프로젝트 디렉토리 구조
+```
+~/Projects/
+├── personal/             # 개인 프로젝트
+│   ├── .gitconfig        # Git user 설정
+│   ├── .envrc            # direnv (KUBECONFIG, AWS)
+│   ├── .kube/
+│   └── .aws/
+├── work/
+│   ├── company-a/        # 외주 A사
+│   │   ├── .gitconfig
+│   │   ├── .envrc
+│   │   └── ...
+│   └── company-b/        # 외주 B사
+└── community/
+    └── thebrothers/      # 모임 프로젝트
 ```
 
 ### chezmoi 파일 명명 규칙
@@ -133,56 +153,62 @@ remote-install.sh
 | `run_once_` | 한 번만 실행 |
 | `run_onchange_` | 변경 시 실행 |
 
-## 시크릿 관리 (Vault)
+## 시크릿 관리 (Infisical)
 
-HashiCorp Vault를 사용하여 시크릿을 관리합니다.
+Infisical을 사용하여 시크릿을 관리합니다. CLI로 모든 CRUD 작업이 가능합니다.
 
-### Vault 개발 서버 시작
+### Infisical 로그인
 ```bash
-# Docker로 실행
-docker run -d --cap-add=IPC_LOCK -p 8200:8200 \
-  -e VAULT_DEV_ROOT_TOKEN_ID=root \
-  hashicorp/vault
+# 대화형 로그인
+infisical login
 
-# 또는 로컬에서
-vault server -dev -dev-root-token-id=root
+# 서비스 토큰 사용 (CI/CD)
+export INFISICAL_TOKEN="your-service-token"
 ```
 
-### 환경변수 설정
+### 시크릿 조회/설정
 ```bash
-export VAULT_ADDR="http://localhost:8200"
-export VAULT_TOKEN="root"
+# 모든 시크릿 조회
+infisical secrets --env=dev
+
+# 특정 시크릿 조회
+infisical secrets get API_KEY --env=dev --plain
+
+# 시크릿 설정
+infisical secrets set API_KEY="value" --env=dev
+
+# JSON으로 내보내기
+infisical export --format=json --env=dev
 ```
 
-### 시크릿 저장/조회
+### 시크릿 주입하여 명령 실행
 ```bash
-# 시크릿 저장
-vault kv put secret/dotfiles \
-  ANTHROPIC_API_KEY="sk-..." \
-  GPG_KEY_ID="ABC123"
+# 환경변수로 주입
+infisical run --env=dev -- npm start
 
-# 시크릿 조회
-vault kv get secret/dotfiles
+# 특정 프로젝트
+infisical run --projectId=xxx --env=prod -- ./deploy.sh
 ```
 
-### chezmoi에서 Vault 사용
+### chezmoi에서 Infisical 사용
 ```toml
 # ~/.config/chezmoi/chezmoi.toml
-[data.vault]
+[data.infisical]
     enabled = true
-    address = "http://localhost:8200"
-    token = "root"
+    project_id = "your-project-id"
+    env = "dev"
 ```
 
 템플릿에서 사용:
 ```
-{{ output "vault" "kv" "get" "-field=ANTHROPIC_API_KEY" "secret/dotfiles" | trim }}
+{{ output "infisical" "secrets" "get" "API_KEY" "--plain" | trim }}
 ```
 
 ## 설계 원칙
 
 - **chezmoi**: 선언적 dotfiles 관리, 템플릿 지원
-- **Vault**: 중앙집중식 시크릿 관리, 100% CLI/API 제어
+- **Infisical**: 시크릿 관리, CLI로 완전 제어
+- **direnv**: 디렉토리별 환경변수 자동 전환
 - **Idempotent**: 여러 번 실행해도 동일한 결과
 - **완전 자동화**: 환경변수로 모든 프롬프트 자동 처리 가능
 
@@ -200,5 +226,6 @@ vault kv get secret/dotfiles
 | 패키지 | `Brewfile` | brew, cask 패키지 |
 | Shell | `home/dot_zshrc.tmpl` | Zsh 설정 |
 | macOS | `.chezmoiscripts/run_once_after_03-macos-defaults.sh.tmpl` | 시스템 설정 |
-| Git | `home/dot_gitconfig.tmpl` | Git 설정 (템플릿) |
-| 시크릿 | `secrets/vault.sh` | Vault 설정 |
+| Git | `home/dot_gitconfig.tmpl` | Git 설정 (conditional includes) |
+| 프로젝트 | `home/private_Projects/` | 컨텍스트별 .gitconfig, .envrc |
+| 시크릿 | `secrets/infisical.sh` | Infisical 설정 |

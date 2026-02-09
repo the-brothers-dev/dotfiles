@@ -1,6 +1,6 @@
 #!/bin/bash
 # ============================================================
-#  🚀 Mac 개발 환경 부트스트랩 (chezmoi + Vault)
+#  🚀 Mac 개발 환경 부트스트랩 (chezmoi + Infisical)
 #
 #  사용법:
 #    ./bootstrap.sh           # 메뉴 표시
@@ -11,10 +11,10 @@
 #    bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/main/remote-install.sh)
 #
 #  환경변수 (비대화형 설치용):
-#    CHEZMOI_NAME      - Git 사용자 이름
-#    CHEZMOI_EMAIL     - Git 이메일
-#    VAULT_ADDR        - Vault 서버 주소
-#    VAULT_TOKEN       - Vault 인증 토큰
+#    CHEZMOI_NAME         - Git 사용자 이름
+#    CHEZMOI_EMAIL        - Git 이메일
+#    INFISICAL_TOKEN      - Infisical 서비스 토큰
+#    INFISICAL_PROJECT_ID - Infisical 프로젝트 ID
 # ============================================================
 set -euo pipefail
 
@@ -43,7 +43,7 @@ show_menu() {
     echo ""
     echo -e "${BOLD}============================================${NC}"
     echo -e "${BOLD}  🚀 Mac 개발 환경 부트스트랩${NC}"
-    echo -e "${BOLD}     (chezmoi + Vault)${NC}"
+    echo -e "${BOLD}     (chezmoi + Infisical)${NC}"
     echo -e "${BOLD}============================================${NC}"
     echo ""
     echo -e "  ${CYAN}1)${NC} 설치 (Install)"
@@ -132,10 +132,10 @@ do_install() {
     name = "${CHEZMOI_NAME}"
     email = "${CHEZMOI_EMAIL}"
 
-[data.vault]
-    enabled = $( [ -n "${VAULT_ADDR:-}" ] && echo "true" || echo "false" )
-$( [ -n "${VAULT_ADDR:-}" ] && echo "    address = \"${VAULT_ADDR}\"" )
-$( [ -n "${VAULT_TOKEN:-}" ] && echo "    token = \"${VAULT_TOKEN}\"" )
+[data.infisical]
+    enabled = $( [ -n "${INFISICAL_TOKEN:-}" ] && echo "true" || echo "false" )
+$( [ -n "${INFISICAL_PROJECT_ID:-}" ] && echo "    project_id = \"${INFISICAL_PROJECT_ID}\"" )
+$( [ -n "${INFISICAL_ENV:-}" ] && echo "    env = \"${INFISICAL_ENV}\"" )
 
 [edit]
     command = "agy"
@@ -154,14 +154,14 @@ EOF
     fi
     ok "chezmoi 적용 완료"
 
-    # 5. Vault 초기화 (선택)
-    if [ -n "${VAULT_ADDR:-}" ] && [ -n "${VAULT_TOKEN:-}" ]; then
-        log "Vault 연결 확인 중..."
-        export VAULT_ADDR VAULT_TOKEN
-        if vault status &>/dev/null; then
-            ok "Vault 연결됨: $VAULT_ADDR"
+    # 5. Infisical 초기화 (선택)
+    if [ -n "${INFISICAL_TOKEN:-}" ]; then
+        log "Infisical 연결 확인 중..."
+        export INFISICAL_TOKEN
+        if command -v infisical &>/dev/null && infisical user &>/dev/null; then
+            ok "Infisical 연결됨"
         else
-            warn "Vault 연결 실패 - 나중에 설정하세요"
+            warn "Infisical 연결 실패 - 나중에 'infisical login'으로 설정하세요"
         fi
     fi
 

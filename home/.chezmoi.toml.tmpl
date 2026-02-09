@@ -7,12 +7,12 @@
     email = {{ promptStringOnce . "email" "Git 이메일" | quote }}
     name = {{ promptStringOnce . "name" "Git 사용자 이름" | quote }}
 
-[data.vault]
-    # Vault 서버 설정 (선택사항)
-    enabled = {{ promptBoolOnce . "vault.enabled" "Vault 시크릿 관리 사용" }}
-{{- if .vault.enabled }}
-    address = {{ promptStringOnce . "vault.address" "Vault 서버 주소 (예: http://localhost:8200)" | quote }}
-    token = {{ promptStringOnce . "vault.token" "Vault 토큰" | quote }}
+[data.infisical]
+    # Infisical 시크릿 관리 설정 (선택사항)
+    enabled = {{ promptBoolOnce . "infisical.enabled" "Infisical 시크릿 관리 사용" }}
+{{- if .infisical.enabled }}
+    project_id = {{ promptStringOnce . "infisical.project_id" "Infisical 프로젝트 ID" | quote }}
+    env = {{ promptStringOnce . "infisical.env" "Infisical 환경 (dev/staging/prod)" | quote }}
 {{- end }}
 
 [edit]

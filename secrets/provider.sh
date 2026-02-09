@@ -3,7 +3,7 @@
 # 시크릿 프로바이더 추상화 레이어
 #
 # 지원 프로바이더:
-#   - vault (HashiCorp Vault) - 기본
+#   - infisical (기본) - Infisical Cloud/Self-hosted
 #   - onepassword (1Password CLI)
 #   - bitwarden (Bitwarden CLI)
 #   - env (환경변수만 사용)
@@ -17,7 +17,7 @@
 SECRETS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # 기본 프로바이더 (환경변수로 오버라이드 가능)
-SECRETS_PROVIDER="${SECRETS_PROVIDER:-vault}"
+SECRETS_PROVIDER="${SECRETS_PROVIDER:-infisical}"
 
 # 색상
 _SEC_GREEN='\033[0;32m'
@@ -38,9 +38,9 @@ secrets_init() {
     local provider="${1:-$SECRETS_PROVIDER}"
 
     case "$provider" in
-        vault)
-            source "$SECRETS_DIR/vault.sh"
-            _vault_init
+        infisical)
+            source "$SECRETS_DIR/infisical.sh"
+            _infisical_init
             ;;
         onepassword)
             if [ -f "$SECRETS_DIR/onepassword.sh" ]; then
@@ -76,13 +76,13 @@ secrets_init() {
 secrets_get() {
     local key="$1"
     local default="${2:-}"
-    local provider="${SECRETS_PROVIDER:-vault}"
+    local provider="${SECRETS_PROVIDER:-infisical}"
 
     local value=""
 
     case "$provider" in
-        vault)
-            value=$(_vault_get "$key")
+        infisical)
+            value=$(_infisical_get "$key")
             ;;
         onepassword)
             value=$(_onepassword_get "$key")
@@ -109,11 +109,11 @@ secrets_get() {
 secrets_set() {
     local key="$1"
     local value="$2"
-    local provider="${SECRETS_PROVIDER:-vault}"
+    local provider="${SECRETS_PROVIDER:-infisical}"
 
     case "$provider" in
-        vault)
-            _vault_set "$key" "$value"
+        infisical)
+            _infisical_set "$key" "$value"
             ;;
         onepassword)
             _sec_warn "1Password는 CLI로 값 설정을 지원하지 않습니다"
@@ -130,13 +130,13 @@ secrets_set() {
 
 # 프로바이더 상태 확인
 secrets_status() {
-    local provider="${SECRETS_PROVIDER:-vault}"
+    local provider="${SECRETS_PROVIDER:-infisical}"
 
     echo "시크릿 프로바이더: $provider"
 
     case "$provider" in
-        vault)
-            _vault_status
+        infisical)
+            _infisical_status
             ;;
         onepassword)
             _onepassword_status
@@ -152,11 +152,11 @@ secrets_status() {
 
 # 프로바이더 로그아웃
 secrets_logout() {
-    local provider="${SECRETS_PROVIDER:-vault}"
+    local provider="${SECRETS_PROVIDER:-infisical}"
 
     case "$provider" in
-        vault)
-            _vault_logout
+        infisical)
+            _infisical_logout
             ;;
         onepassword)
             _onepassword_logout

@@ -6,9 +6,9 @@
 [user]
     name = {{ .name }}
     email = {{ .email }}
-{{- if and .vault.enabled .vault.token }}
-    # GPG 서명키는 Vault에서 가져옴
-    # signingkey = {{ output "vault" "kv" "get" "-field=gpg_key" "secret/dotfiles" | trim }}
+{{- if .infisical.enabled }}
+    # GPG 서명키는 Infisical에서 가져옴 (필요시 주석 해제)
+    # signingkey = {{ output "infisical" "secrets" "get" "GPG_KEY_ID" "--plain" | trim }}
 {{- end }}
 
 [init]
