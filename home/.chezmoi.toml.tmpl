@@ -1,0 +1,20 @@
+# ============================================================
+# chezmoi 설정 파일
+# 초기화 시 프롬프트로 입력받은 값들이 저장됨
+# ============================================================
+
+[data]
+    email = {{ promptStringOnce . "email" "Git 이메일" | quote }}
+    name = {{ promptStringOnce . "name" "Git 사용자 이름" | quote }}
+
+[data.vault]
+    # Vault 서버 설정 (선택사항)
+    enabled = {{ promptBoolOnce . "vault.enabled" "Vault 시크릿 관리 사용" }}
+{{- if .vault.enabled }}
+    address = {{ promptStringOnce . "vault.address" "Vault 서버 주소 (예: http://localhost:8200)" | quote }}
+    token = {{ promptStringOnce . "vault.token" "Vault 토큰" | quote }}
+{{- end }}
+
+[edit]
+    command = "agy"
+    args = ["--wait"]

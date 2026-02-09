@@ -1,6 +1,6 @@
 #!/bin/bash
 # ============================================================
-#  🚀 Mac 개발 환경 부트스트랩
+#  🚀 Mac 개발 환경 부트스트랩 (chezmoi + Vault)
 #
 #  사용법:
 #    ./bootstrap.sh           # 메뉴 표시
@@ -9,6 +9,12 @@
 #
 #  원라이너:
 #    bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/main/remote-install.sh)
+#
+#  환경변수 (비대화형 설치용):
+#    CHEZMOI_NAME      - Git 사용자 이름
+#    CHEZMOI_EMAIL     - Git 이메일
+#    VAULT_ADDR        - Vault 서버 주소
+#    VAULT_TOKEN       - Vault 인증 토큰
 # ============================================================
 set -euo pipefail
 
@@ -27,6 +33,7 @@ warn() { echo -e "${YELLOW}[⚠️]${NC} $1"; }
 err()  { echo -e "${RED}[❌]${NC} $1"; }
 
 DOTFILES_DIR="$HOME/.dotfiles"
+DOTFILES_REPO="https://github.com/the-brothers-dev/dotfiles.git"
 LOG_FILE="$HOME/.dotfiles-bootstrap.log"
 
 # ============================================================
@@ -36,18 +43,21 @@ show_menu() {
     echo ""
     echo -e "${BOLD}============================================${NC}"
     echo -e "${BOLD}  🚀 Mac 개발 환경 부트스트랩${NC}"
+    echo -e "${BOLD}     (chezmoi + Vault)${NC}"
     echo -e "${BOLD}============================================${NC}"
     echo ""
     echo -e "  ${CYAN}1)${NC} 설치 (Install)"
     echo -e "  ${CYAN}2)${NC} 제거 (Uninstall)"
-    echo -e "  ${CYAN}3)${NC} 종료 (Exit)"
+    echo -e "  ${CYAN}3)${NC} 업데이트 (Update)"
+    echo -e "  ${CYAN}4)${NC} 종료 (Exit)"
     echo ""
-    read -rp "  선택하세요 [1-3]: " choice
+    read -rp "  선택하세요 [1-4]: " choice
 
     case $choice in
         1) do_install ;;
         2) do_uninstall ;;
-        3) echo "종료합니다."; exit 0 ;;
+        3) do_update ;;
+        4) echo "종료합니다."; exit 0 ;;
         *) echo "잘못된 선택입니다."; show_menu ;;
     esac
 }
@@ -56,12 +66,11 @@ show_menu() {
 # 설치
 # ============================================================
 do_install() {
-    # 로그 파일 기록 시작
     exec > >(tee -a "$LOG_FILE") 2>&1
 
     echo ""
     echo "============================================"
-    echo "  🚀 Mac 개발 환경 설치"
+    echo "  🚀 Mac 개발 환경 설치 (chezmoi)"
     echo "  $(date)"
     echo "============================================"
     echo ""
@@ -70,10 +79,24 @@ do_install() {
     log "Xcode CLI Tools 확인 중..."
     if ! xcode-select -p &>/dev/null; then
         warn "Xcode CLI Tools가 필요합니다."
-        xcode-select --install
-        echo ""
-        err "Xcode CLI Tools 설치 팝업을 완료한 후 이 스크립트를 다시 실행해주세요."
-        exit 1
+
+        # 비대화형 설치 시도
+        touch /tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress
+        CLT_PACKAGE=$(softwareupdate -l 2>/dev/null | grep -o "Command Line Tools for Xcode-[0-9.]*" | head -1 || true)
+
+        if [ -n "$CLT_PACKAGE" ]; then
+            log "Xcode CLI Tools 자동 설치 중: $CLT_PACKAGE"
+            if [ -n "${SUDO_PASS:-}" ]; then
+                echo "$SUDO_PASS" | sudo -S softwareupdate -i "$CLT_PACKAGE" --verbose
+            else
+                sudo softwareupdate -i "$CLT_PACKAGE" --verbose
+            fi
+        else
+            xcode-select --install
+            err "Xcode CLI Tools 설치 팝업을 완료한 후 이 스크립트를 다시 실행해주세요."
+            exit 1
+        fi
+        rm -f /tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress
     fi
     ok "Xcode CLI Tools"
 
@@ -89,93 +112,66 @@ do_install() {
     fi
     ok "Homebrew $(brew --version | head -1)"
 
-    # 3. Brewfile
-    log "Brewfile 패키지 확인 중..."
-    if brew bundle check --file="$DOTFILES_DIR/Brewfile" &>/dev/null; then
-        ok "모든 패키지 이미 설치됨"
-    else
-        log "누락된 패키지 설치 중... (시간이 걸릴 수 있습니다)"
-        brew bundle --file="$DOTFILES_DIR/Brewfile" 2>&1 | while read -r line; do
-            echo "  $line"
-        done
+    # 3. chezmoi 설치
+    log "chezmoi 확인 중..."
+    if ! command -v chezmoi &>/dev/null; then
+        log "chezmoi 설치 중..."
+        brew install chezmoi
+    fi
+    ok "chezmoi $(chezmoi --version)"
 
-        FAILED=$(brew bundle check --file="$DOTFILES_DIR/Brewfile" 2>&1 || true)
-        if echo "$FAILED" | grep -q "not yet installed"; then
-            warn "일부 패키지 설치 실패:"
-            echo "$FAILED" | grep "not yet installed" | while read -r line; do
-                echo "  ⚠️  $line"
-            done
+    # 4. chezmoi 초기화 및 적용
+    log "chezmoi 초기화 중..."
+
+    # 비대화형 모드: 환경변수로 데이터 설정
+    if [ -n "${CHEZMOI_NAME:-}" ] && [ -n "${CHEZMOI_EMAIL:-}" ]; then
+        # chezmoi 데이터 파일 생성
+        mkdir -p "$HOME/.config/chezmoi"
+        cat > "$HOME/.config/chezmoi/chezmoi.toml" << EOF
+[data]
+    name = "${CHEZMOI_NAME}"
+    email = "${CHEZMOI_EMAIL}"
+
+[data.vault]
+    enabled = $( [ -n "${VAULT_ADDR:-}" ] && echo "true" || echo "false" )
+$( [ -n "${VAULT_ADDR:-}" ] && echo "    address = \"${VAULT_ADDR}\"" )
+$( [ -n "${VAULT_TOKEN:-}" ] && echo "    token = \"${VAULT_TOKEN}\"" )
+
+[edit]
+    command = "agy"
+    args = ["--wait"]
+EOF
+        ok "chezmoi 설정 완료 (비대화형)"
+    fi
+
+    # chezmoi init (저장소에서 또는 로컬에서)
+    if [ -d "$DOTFILES_DIR/home" ]; then
+        # 로컬 저장소 사용
+        chezmoi init --source="$DOTFILES_DIR/home" --apply
+    else
+        # GitHub에서 가져오기
+        chezmoi init --apply "$DOTFILES_REPO"
+    fi
+    ok "chezmoi 적용 완료"
+
+    # 5. Vault 초기화 (선택)
+    if [ -n "${VAULT_ADDR:-}" ] && [ -n "${VAULT_TOKEN:-}" ]; then
+        log "Vault 연결 확인 중..."
+        export VAULT_ADDR VAULT_TOKEN
+        if vault status &>/dev/null; then
+            ok "Vault 연결됨: $VAULT_ADDR"
         else
-            ok "Brewfile 설치 완료"
+            warn "Vault 연결 실패 - 나중에 설정하세요"
         fi
     fi
 
-    # 4. Oh My Zsh
-    log "Oh My Zsh 확인 중..."
-    if [ ! -d "$HOME/.oh-my-zsh" ]; then
-        log "Oh My Zsh 설치 중..."
-        RUNZSH=no KEEP_ZSHRC=yes sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-        ok "Oh My Zsh 설치 완료"
-    else
-        ok "Oh My Zsh 이미 설치됨"
-    fi
-
-    # 5. dotfiles 심링크
-    log "dotfiles 심링크 생성 중..."
-    bash "$DOTFILES_DIR/scripts/symlinks.sh"
-    ok "심링크 완료"
-
-    # 6. Git 사용자 설정
-    log "Git 사용자 설정..."
-    CURRENT_NAME=$(git config --global user.name 2>/dev/null || echo "")
-    CURRENT_EMAIL=$(git config --global user.email 2>/dev/null || echo "")
-
-    if [ -z "$CURRENT_NAME" ] || [ -z "$CURRENT_EMAIL" ]; then
-        # 환경변수가 있으면 자동 설정 (비대화형 모드)
-        if [ -n "${GIT_USER_NAME:-}" ] && [ -n "${GIT_USER_EMAIL:-}" ]; then
-            git config --global user.name "$GIT_USER_NAME"
-            git config --global user.email "$GIT_USER_EMAIL"
-            ok "Git 사용자 설정 완료: $GIT_USER_NAME <$GIT_USER_EMAIL>"
-        else
-            # 대화형 모드
-            echo ""
-            echo "  Git 사용자 정보를 입력해주세요:"
-
-            if [ -z "$CURRENT_NAME" ]; then
-                read -rp "  이름: " GIT_NAME
-                git config --global user.name "$GIT_NAME"
-            fi
-
-            if [ -z "$CURRENT_EMAIL" ]; then
-                read -rp "  이메일: " GIT_EMAIL
-                git config --global user.email "$GIT_EMAIL"
-            fi
-            ok "Git 사용자 설정 완료"
-        fi
-    else
-        ok "Git 사용자: $CURRENT_NAME <$CURRENT_EMAIL>"
-    fi
-
-    # 7. krew
-    log "krew 플러그인 업데이트 중..."
-    if command -v kubectl-krew &>/dev/null; then
-        kubectl krew update 2>/dev/null || true
-        ok "krew 업데이트 완료"
-    else
-        warn "krew 설치를 확인해주세요"
-    fi
-
-    # 8. macOS 시스템 설정
-    log "macOS 시스템 설정 적용 중..."
-    bash "$DOTFILES_DIR/macos/defaults.sh"
-
-    # 9. Antigravity 설정
+    # 6. Antigravity 설정
     if [ -f "$DOTFILES_DIR/antigravity/setup.sh" ]; then
         log "Antigravity 설정 중..."
         bash "$DOTFILES_DIR/antigravity/setup.sh"
     fi
 
-    # 10. Claude Code API 키 설정
+    # 7. Claude Code API 키 설정
     if [ -n "${ANTHROPIC_API_KEY:-}" ]; then
         log "Claude Code API 키 설정 중..."
         if command -v claude &>/dev/null; then
@@ -187,13 +183,12 @@ do_install() {
         fi
     fi
 
-    # 11. SSH 키
+    # 8. SSH 키
     log "SSH 키 확인 중..."
     if [ ! -f "$HOME/.ssh/id_ed25519" ]; then
-        # 환경변수가 있으면 자동 처리
         if [ -n "${CREATE_SSH_KEY:-}" ]; then
             if [[ "$CREATE_SSH_KEY" =~ ^[Yy]$ ]]; then
-                SSH_EMAIL=$(git config --global user.email 2>/dev/null || echo "")
+                SSH_EMAIL="${CHEZMOI_EMAIL:-$(git config --global user.email 2>/dev/null || echo '')}"
                 ssh-keygen -t ed25519 -C "$SSH_EMAIL" -f "$HOME/.ssh/id_ed25519" -N ""
                 eval "$(ssh-agent -s)" >/dev/null
                 ssh-add "$HOME/.ssh/id_ed25519" 2>/dev/null
@@ -206,14 +201,12 @@ do_install() {
                 echo "  https://github.com/settings/keys"
                 echo ""
             else
-                ok "SSH 키 생성 건너뜀 (CREATE_SSH_KEY=n)"
+                ok "SSH 키 생성 건너뜀"
             fi
-        else
-            # 대화형 모드
-            echo ""
+        elif [ -t 0 ]; then
             read -rp "  SSH 키를 생성할까요? (y/N): " CREATE_SSH
             if [[ "$CREATE_SSH" =~ ^[Yy]$ ]]; then
-                SSH_EMAIL=$(git config --global user.email 2>/dev/null || echo "")
+                SSH_EMAIL="${CHEZMOI_EMAIL:-$(git config --global user.email 2>/dev/null || echo '')}"
                 read -rp "  SSH 키 이메일 [$SSH_EMAIL]: " SSH_INPUT_EMAIL
                 SSH_EMAIL="${SSH_INPUT_EMAIL:-$SSH_EMAIL}"
 
@@ -243,15 +236,24 @@ do_install() {
     echo "  설치된 항목:"
     echo "    • Homebrew 패키지: $(brew list --formula | wc -l | tr -d ' ')개"
     echo "    • Cask 앱: $(brew list --cask | wc -l | tr -d ' ')개"
-    echo "    • dotfiles 심링크 적용됨"
+    echo "    • chezmoi로 dotfiles 관리"
     echo "    • macOS 시스템 설정 적용됨"
     echo ""
     echo "  다음 단계:"
     echo "    1. 터미널을 재시작하세요 (또는 source ~/.zshrc)"
-    echo "    2. iTerm2를 열어 기본 터미널로 사용하세요"
+    echo "    2. chezmoi edit ~/.zshrc 로 설정 수정 가능"
     echo ""
     echo "  로그 파일: $LOG_FILE"
     echo ""
+}
+
+# ============================================================
+# 업데이트
+# ============================================================
+do_update() {
+    log "chezmoi 업데이트 중..."
+    chezmoi update
+    ok "업데이트 완료"
 }
 
 # ============================================================
@@ -264,9 +266,9 @@ do_uninstall() {
     echo -e "${RED}============================================${NC}"
     echo ""
     echo "  다음 항목을 제거합니다:"
-    echo "    • dotfiles 심링크 (백업 파일 복원)"
+    echo "    • chezmoi 관리 파일들"
     echo "    • Oh My Zsh"
-    echo "    • Brewfile 패키지"
+    echo "    • Brewfile 패키지 (선택)"
     echo "    • Homebrew (선택)"
     echo ""
     read -rp "  계속하시겠습니까? (yes를 입력): " CONFIRM
@@ -277,10 +279,20 @@ do_uninstall() {
 
     echo ""
 
-    # 1. 심링크 제거 및 백업 복원
-    log "심링크 제거 및 백업 복원 중..."
-    bash "$DOTFILES_DIR/scripts/symlinks.sh" --restore
-    ok "심링크 제거 완료"
+    # 1. chezmoi 제거
+    log "chezmoi 관리 파일 제거 중..."
+    if command -v chezmoi &>/dev/null; then
+        # chezmoi가 관리하는 파일 목록
+        chezmoi managed | while read -r file; do
+            if [ -f "$HOME/$file" ]; then
+                rm -f "$HOME/$file"
+                echo "  제거: $file"
+            fi
+        done
+        rm -rf "$HOME/.local/share/chezmoi"
+        rm -rf "$HOME/.config/chezmoi"
+        ok "chezmoi 파일 제거됨"
+    fi
 
     # 2. Oh My Zsh 제거
     log "Oh My Zsh 확인 중..."
@@ -303,7 +315,6 @@ do_uninstall() {
         if [[ "$REMOVE_BREW_PKGS" =~ ^[Yy]$ ]]; then
             log "Brewfile 패키지 제거 중..."
 
-            # Cask 앱 제거
             if [ -f "$DOTFILES_DIR/Brewfile" ]; then
                 grep '^cask ' "$DOTFILES_DIR/Brewfile" | sed 's/cask "//;s/"//' | while read -r cask; do
                     if brew list --cask "$cask" &>/dev/null; then
@@ -312,7 +323,6 @@ do_uninstall() {
                     fi
                 done
 
-                # Formula 제거
                 grep '^brew ' "$DOTFILES_DIR/Brewfile" | sed 's/brew "//;s/"//' | while read -r formula; do
                     if brew list "$formula" &>/dev/null; then
                         echo "  제거: $formula"
@@ -352,7 +362,7 @@ do_uninstall() {
     echo "  참고:"
     echo "    • macOS 시스템 설정은 수동으로 복원해야 합니다"
     echo "    • SSH 키는 보존되었습니다 (~/.ssh/)"
-    echo "    • Git 설정은 보존되었습니다"
+    echo "    • Git 설정은 제거되었습니다"
     echo ""
 }
 
@@ -365,6 +375,9 @@ case "${1:-}" in
         ;;
     uninstall|u|-u|--uninstall)
         do_uninstall
+        ;;
+    update|up|-up|--update)
+        do_update
         ;;
     *)
         show_menu

@@ -1,0 +1,13 @@
+#!/bin/bash
+# ============================================================
+# krew 플러그인 업데이트
+# ============================================================
+set -euo pipefail
+
+if command -v kubectl-krew &>/dev/null; then
+    echo "🔌 krew 플러그인 업데이트 중..."
+    kubectl krew update 2>/dev/null || true
+    echo "✅ krew 업데이트 완료"
+else
+    echo "⚠️  krew가 설치되어 있지 않습니다"
+fi

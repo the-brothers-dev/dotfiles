@@ -1,0 +1,10 @@
+# ============================================================
+# 외부 리소스 (chezmoi가 자동으로 다운로드/관리)
+# ============================================================
+
+[".oh-my-zsh"]
+    type = "archive"
+    url = "https://github.com/ohmyzsh/ohmyzsh/archive/master.tar.gz"
+    exact = true
+    stripComponents = 1
+    refreshPeriod = "168h"  # 1주일마다 갱신

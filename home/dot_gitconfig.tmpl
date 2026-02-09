@@ -1,0 +1,37 @@
+# ============================================================
+# .gitconfig - Git 기본 설정
+# Managed by chezmoi - 직접 수정하지 마세요
+# ============================================================
+
+[user]
+    name = {{ .name }}
+    email = {{ .email }}
+{{- if and .vault.enabled .vault.token }}
+    # GPG 서명키는 Vault에서 가져옴
+    # signingkey = {{ output "vault" "kv" "get" "-field=gpg_key" "secret/dotfiles" | trim }}
+{{- end }}
+
+[init]
+    defaultBranch = main
+
+[core]
+    excludesfile = ~/.gitignore_global
+    editor = agy --wait
+    autocrlf = input
+
+[pull]
+    rebase = false
+
+[push]
+    default = current
+    autoSetupRemote = true
+
+[alias]
+    st = status
+    co = checkout
+    br = branch
+    ci = commit
+    lg = log --oneline --graph --decorate
+
+[color]
+    ui = auto
