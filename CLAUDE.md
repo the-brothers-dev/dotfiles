@@ -17,6 +17,7 @@ macOS 개발 환경을 자동화하는 dotfiles 저장소입니다. 깨끗한 Ma
 | `GIT_USER_NAME` | Git 사용자 이름 | 자동 설정 |
 | `GIT_USER_EMAIL` | Git 사용자 이메일 | 자동 설정 |
 | `CREATE_SSH_KEY` | SSH 키 생성 여부 (y/n) | 자동 설정 |
+| `ANTHROPIC_API_KEY` | Claude Code API 키 | Pro/Team 사용자 |
 
 ## 명령어 가이드
 
@@ -51,7 +52,8 @@ cp .env.example .env
 # .env 편집 후
 
 source .env && sshpass -p "$REMOTE_PASS" ssh -t "$REMOTE_USER@$REMOTE_HOST" \
-  "SUDO_PASS='$REMOTE_PASS' GIT_USER_NAME='$GIT_USER_NAME' GIT_USER_EMAIL='$GIT_USER_EMAIL' CREATE_SSH_KEY='$CREATE_SSH_KEY' \
+  "SUDO_PASS='$REMOTE_PASS' GIT_USER_NAME='$GIT_USER_NAME' GIT_USER_EMAIL='$GIT_USER_EMAIL' \
+  CREATE_SSH_KEY='$CREATE_SSH_KEY' ANTHROPIC_API_KEY='$ANTHROPIC_API_KEY' \
   bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/main/remote-install.sh)"
 ```
 
@@ -62,7 +64,7 @@ Claude Code Bash는 **non-TTY** 환경이므로 `expect`를 사용합니다.
 ```bash
 source .env && expect << EXPECT_SCRIPT
 set timeout 600
-spawn ssh -t -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} "SUDO_PASS='${REMOTE_PASS}' GIT_USER_NAME='${GIT_USER_NAME}' GIT_USER_EMAIL='${GIT_USER_EMAIL}' CREATE_SSH_KEY='${CREATE_SSH_KEY}' bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/main/remote-install.sh)"
+spawn ssh -t -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} "SUDO_PASS='${REMOTE_PASS}' GIT_USER_NAME='${GIT_USER_NAME}' GIT_USER_EMAIL='${GIT_USER_EMAIL}' CREATE_SSH_KEY='${CREATE_SSH_KEY}' ANTHROPIC_API_KEY='${ANTHROPIC_API_KEY}' bash <(curl -fsSL https://raw.githubusercontent.com/the-brothers-dev/dotfiles/main/remote-install.sh)"
 
 expect {
     -re "Password:|password:" {

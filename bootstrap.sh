@@ -175,7 +175,19 @@ do_install() {
         bash "$DOTFILES_DIR/antigravity/setup.sh"
     fi
 
-    # 10. SSH 키
+    # 10. Claude Code API 키 설정
+    if [ -n "${ANTHROPIC_API_KEY:-}" ]; then
+        log "Claude Code API 키 설정 중..."
+        if command -v claude &>/dev/null; then
+            claude config set --global apiKey "$ANTHROPIC_API_KEY" 2>/dev/null && \
+                ok "Claude Code API 키 설정 완료" || \
+                warn "Claude Code API 키 설정 실패"
+        else
+            warn "Claude Code CLI를 찾을 수 없습니다"
+        fi
+    fi
+
+    # 11. SSH 키
     log "SSH 키 확인 중..."
     if [ ! -f "$HOME/.ssh/id_ed25519" ]; then
         # 환경변수가 있으면 자동 처리
