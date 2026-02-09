@@ -1,0 +1,7 @@
+# ============================================================
+# Company B Git 설정
+# ~/Projects/work/company-b/ 디렉토리에서 자동 적용
+# ============================================================
+[user]
+    name = Your Name
+    email = contractor@company-b.co.kr

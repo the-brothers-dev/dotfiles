@@ -11,7 +11,7 @@ PROJECTS_DIR="$HOME/Projects"
 echo "📁 프로젝트 디렉토리 권한 설정 중..."
 
 # 각 컨텍스트별 credential 디렉토리 생성 및 권한 설정
-for ctx in personal work community/thebrothers; do
+for ctx in personal work work/company-a work/company-b community/thebrothers; do
     ctx_dir="$PROJECTS_DIR/$ctx"
 
     if [ -d "$ctx_dir" ]; then

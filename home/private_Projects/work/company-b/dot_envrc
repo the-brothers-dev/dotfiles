@@ -1,0 +1,20 @@
+# ============================================================
+# Company B 환경 설정
+# direnv가 이 디렉토리 진입 시 자동 로드
+# 활성화: direnv allow
+# ============================================================
+
+# Kubernetes
+export KUBECONFIG="$HOME/Projects/work/company-b/.kube/config"
+
+# AWS
+export AWS_CONFIG_FILE="$HOME/Projects/work/company-b/.aws/config"
+export AWS_SHARED_CREDENTIALS_FILE="$HOME/Projects/work/company-b/.aws/credentials"
+export AWS_PROFILE="company-b-prod"
+
+# GCP (필요시)
+# export GOOGLE_APPLICATION_CREDENTIALS="$HOME/Projects/work/company-b/.gcp/service-account.json"
+# export CLOUDSDK_ACTIVE_CONFIG_NAME="company-b"
+
+# Terraform
+# export TF_VAR_project_id="company-b-prod"

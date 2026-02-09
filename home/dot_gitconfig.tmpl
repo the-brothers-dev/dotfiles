@@ -46,5 +46,12 @@
 [includeIf "gitdir:~/Projects/work/"]
     path = ~/Projects/work/.gitconfig
 
+# 회사별 세분화 (하위 디렉토리가 우선)
+[includeIf "gitdir:~/Projects/work/company-a/"]
+    path = ~/Projects/work/company-a/.gitconfig
+
+[includeIf "gitdir:~/Projects/work/company-b/"]
+    path = ~/Projects/work/company-b/.gitconfig
+
 [includeIf "gitdir:~/Projects/community/thebrothers/"]
     path = ~/Projects/community/thebrothers/.gitconfig
