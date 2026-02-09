@@ -169,7 +169,13 @@ do_install() {
     log "macOS 시스템 설정 적용 중..."
     bash "$DOTFILES_DIR/macos/defaults.sh"
 
-    # 9. SSH 키
+    # 9. Antigravity 설정
+    if [ -f "$DOTFILES_DIR/antigravity/setup.sh" ]; then
+        log "Antigravity 설정 중..."
+        bash "$DOTFILES_DIR/antigravity/setup.sh"
+    fi
+
+    # 10. SSH 키
     log "SSH 키 확인 중..."
     if [ ! -f "$HOME/.ssh/id_ed25519" ]; then
         # 환경변수가 있으면 자동 처리

@@ -1,0 +1,9 @@
+{
+  "workbench.iconTheme": "material-icon-theme",
+  "claudeCode.preferredLocation": "panel",
+  "workbench.editor.enablePreview": false,
+  "workbench.colorTheme": "One Dark Modern",
+  "git.autofetch": true,
+  "vscode-office.openOutline": true,
+  "editor.fontSize": 18,
+}
