@@ -57,6 +57,8 @@ cask "discord"
 cask "google-chrome"
 # Note-taking and collaboration
 cask "notion"
+# AI assistant desktop app
+cask "claude"
 # Terminal-based AI coding assistant
 cask "claude-code"
 # Terminal emulator as alternative to Apple's Terminal app
