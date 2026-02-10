@@ -51,6 +51,8 @@ brew "zsh-syntax-highlighting"
 # ------ GUI Apps ------
 # AI Coding Agent IDE
 cask "antigravity"
+# Voice and text chat for gamers
+cask "discord"
 # Web browser
 cask "google-chrome"
 # Note-taking and collaboration
