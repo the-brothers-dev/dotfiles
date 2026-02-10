@@ -65,8 +65,6 @@ cask "iterm2"
 cask "notion"
 # Docker alternative - fast, light, simple
 cask "orbstack"
-# Team communication
-cask "slack"
 # Mesh VPN based on WireGuard
 cask "tailscale-app"
 # Development environments made easy
