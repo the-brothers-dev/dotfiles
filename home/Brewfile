@@ -48,6 +48,12 @@ brew "zsh-autosuggestions"
 # Fish shell like syntax highlighting for zsh
 brew "zsh-syntax-highlighting"
 
+# ------ Fonts ------
+# D2Coding font for programming (Korean)
+cask "font-d2coding"
+# D2Coding with Nerd Font icons
+cask "font-d2coding-nerd-font"
+
 # ------ GUI Apps ------
 # AI Coding Agent IDE
 cask "antigravity"

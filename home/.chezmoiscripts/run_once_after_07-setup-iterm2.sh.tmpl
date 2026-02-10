@@ -1,0 +1,41 @@
+{{- if eq .chezmoi.os "darwin" -}}
+#!/bin/bash
+# ============================================================
+# iTerm2 설정 - 프로필 및 폰트 구성
+# ============================================================
+set -euo pipefail
+
+DOTFILES_DIR="$HOME/.dotfiles"
+ITERM2_PLIST="$DOTFILES_DIR/iterm2/com.googlecode.iterm2.plist"
+
+echo "🖥️  iTerm2 설정 중..."
+
+# iTerm2 설정 파일이 있으면 복사
+if [ -f "$ITERM2_PLIST" ]; then
+    # iTerm2가 실행 중이면 종료
+    if pgrep -x "iTerm2" > /dev/null; then
+        echo "  ⚠️  iTerm2가 실행 중입니다. 설정 적용을 위해 종료합니다..."
+        osascript -e 'quit app "iTerm2"' 2>/dev/null || true
+        sleep 2
+    fi
+
+    # 설정 복사
+    cp "$ITERM2_PLIST" ~/Library/Preferences/com.googlecode.iterm2.plist
+
+    # 캐시 초기화
+    defaults read com.googlecode.iterm2 > /dev/null 2>&1 || true
+
+    echo "  ✓ iTerm2 설정 적용됨"
+else
+    echo "  ⚠️  iTerm2 설정 파일을 찾을 수 없음: $ITERM2_PLIST"
+
+    # D2Coding 폰트를 기본으로 설정 (설정 파일이 없는 경우)
+    if [ -d "/Library/Fonts/D2Coding"* ] || [ -d "$HOME/Library/Fonts/D2Coding"* ]; then
+        echo "  📝 D2Coding 폰트를 기본으로 설정..."
+        defaults write com.googlecode.iterm2 "Normal Font" -string "D2CodingLigature-Regular 14"
+        defaults write com.googlecode.iterm2 "Non Ascii Font" -string "D2CodingLigature-Regular 14"
+    fi
+fi
+
+echo "✅ iTerm2 설정 완료"
+{{- end }}
