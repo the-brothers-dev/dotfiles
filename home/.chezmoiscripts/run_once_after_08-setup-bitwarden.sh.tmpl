@@ -1,0 +1,32 @@
+{{- if eq .chezmoi.os "darwin" -}}
+#!/bin/bash
+# ============================================================
+# Bitwarden CLI 설정 (Vaultwarden 서버 연동)
+# ============================================================
+set -euo pipefail
+
+VAULTWARDEN_URL="https://vault.vaultwarden.net"
+
+echo "🔐 Bitwarden CLI 설정 중..."
+
+if command -v bw &>/dev/null; then
+    # Vaultwarden 서버 설정
+    bw config server "$VAULTWARDEN_URL"
+    echo "  ✓ Vaultwarden 서버 설정: $VAULTWARDEN_URL"
+
+    echo ""
+    echo "  📝 Bitwarden 로그인 방법:"
+    echo "     bw login admin@thebrothers.dev"
+    echo ""
+    echo "  📝 볼트 잠금 해제:"
+    echo "     export BW_SESSION=\$(bw unlock --raw)"
+    echo ""
+    echo "  📝 비밀번호 조회:"
+    echo "     bw get password google.com"
+    echo "     bw list items --search google"
+else
+    echo "  ⚠️  Bitwarden CLI가 설치되지 않음"
+fi
+
+echo "✅ Bitwarden CLI 설정 완료"
+{{- end }}

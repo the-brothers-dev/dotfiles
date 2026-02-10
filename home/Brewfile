@@ -21,8 +21,10 @@ tap "infisical/get-cli"
 # ------ CLI: Dotfiles & 시크릿 관리 ------
 # Manage your dotfiles across multiple machines
 brew "chezmoi"
-# Infisical CLI for secrets management
+# Infisical CLI for infrastructure secrets
 brew "infisical/get-cli/infisical"
+# Bitwarden CLI for password management (Vaultwarden compatible)
+brew "bitwarden-cli"
 
 # ------ CLI: Kubernetes ------
 # Kubernetes command-line interface
