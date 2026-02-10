@@ -51,18 +51,22 @@ brew "zsh-syntax-highlighting"
 # ------ GUI Apps ------
 # AI Coding Agent IDE
 cask "antigravity"
-# Voice and text chat for gamers
-cask "discord"
-# Web browser
-cask "google-chrome"
-# Note-taking and collaboration
-cask "notion"
 # AI assistant desktop app
 cask "claude"
 # Terminal-based AI coding assistant
 cask "claude-code"
+# Voice and text chat for gamers
+cask "discord"
+# Web browser
+cask "google-chrome"
 # Terminal emulator as alternative to Apple's Terminal app
 cask "iterm2"
+# Note-taking and collaboration
+cask "notion"
+# Docker alternative - fast, light, simple
+cask "orbstack"
+# Team communication
+cask "slack"
 # Mesh VPN based on WireGuard
 cask "tailscale-app"
 # Development environments made easy

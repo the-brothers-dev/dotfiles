@@ -1,0 +1,58 @@
+{{- if eq .chezmoi.os "darwin" -}}
+#!/bin/bash
+# ============================================================
+# Dock 설정 - 앱 구성
+# ============================================================
+set -euo pipefail
+
+echo "🖥️  Dock 설정 중..."
+
+# Dock 앱 목록 초기화
+defaults write com.apple.dock persistent-apps -array
+
+# Dock에 앱 추가하는 함수
+add_app_to_dock() {
+    local app_path="$1"
+    if [ -d "$app_path" ]; then
+        defaults write com.apple.dock persistent-apps -array-add \
+            "<dict>
+                <key>tile-data</key>
+                <dict>
+                    <key>file-data</key>
+                    <dict>
+                        <key>_CFURLString</key>
+                        <string>file://${app_path}</string>
+                        <key>_CFURLStringType</key>
+                        <integer>15</integer>
+                    </dict>
+                </dict>
+            </dict>"
+        echo "  ✓ $(basename "$app_path" .app)"
+    fi
+}
+
+# Dock 앱 구성 (순서대로)
+add_app_to_dock "/System/Applications/Launchpad.app"
+add_app_to_dock "/Applications/Google Chrome.app"
+add_app_to_dock "/Applications/iTerm.app"
+add_app_to_dock "/Applications/Claude.app"
+add_app_to_dock "/Applications/Notion.app"
+add_app_to_dock "/Applications/OrbStack.app"
+add_app_to_dock "/Applications/Discord.app"
+add_app_to_dock "/Applications/Antigravity.app"
+add_app_to_dock "/Applications/Slack.app"
+add_app_to_dock "/System/Applications/Mail.app"
+add_app_to_dock "/System/Applications/Calendar.app"
+add_app_to_dock "/System/Applications/Notes.app"
+add_app_to_dock "/Applications/Keynote.app"
+add_app_to_dock "/Applications/Numbers.app"
+add_app_to_dock "/Applications/Pages.app"
+add_app_to_dock "/System/Applications/App Store.app"
+add_app_to_dock "/System/Applications/iPhone Mirroring.app"
+add_app_to_dock "/System/Applications/System Settings.app"
+
+# Dock 재시작
+killall Dock 2>/dev/null || true
+
+echo "✅ Dock 설정 완료"
+{{- end }}
