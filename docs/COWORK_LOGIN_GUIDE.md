@@ -6,8 +6,20 @@
 
 | 용도 | 도구 | 서버 |
 |------|------|------|
-| **인프라 시크릿** (API 키, 토큰) | Infisical | app.infisical.com |
+| **인프라 시크릿** (API 키, SSH, Git 설정) | Infisical | app.infisical.com |
 | **로그인 비밀번호** (Google, Notion 등) | Bitwarden CLI | vault.vaultwarden.net |
+
+### Infisical에 저장된 시크릿
+- `REMOTE_HOST`, `REMOTE_USER`, `REMOTE_PASS` - SSH 원격 설치용
+- `CHEZMOI_NAME`, `CHEZMOI_EMAIL` - Git 사용자 설정
+- `CREATE_SSH_KEY` - SSH 키 생성 플래그
+- `ANTHROPIC_API_KEY` - Claude API 키
+
+### Vaultwarden에 저장할 항목 (권장)
+- Google - hmbae.dev (accounts.google.com)
+- Google - admin (accounts.google.com)
+- Notion - hmbae.dev (notion.so)
+- Discord - hmbae.dev (discord.com)
 
 ## 사전 준비
 
